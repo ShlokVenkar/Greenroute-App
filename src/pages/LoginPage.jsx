@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSimulation } from '../context/SimulationContext';
+import { GreenRouteHeroLogo } from '../components/Logo';
 import {
   Navigation,
   ShieldAlert,
@@ -94,12 +95,17 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Logo Badge */}
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white shadow-xl shadow-emerald-950/60 mb-2 border border-emerald-400/30">
-          <Radio className="w-7 h-7 animate-pulse" />
+        {/* Professional GreenRoute App Logo */}
+        <div className="mb-2.5">
+          <GreenRouteHeroLogo size={70} />
         </div>
 
-        <h1 className="text-xl font-black text-white tracking-tight">GreenRoute</h1>
+        <div className="flex items-center justify-center gap-1.5">
+          <h1 className="text-2xl font-black text-white tracking-tight">GreenRoute</h1>
+          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono">
+            PRO
+          </span>
+        </div>
         <p className="text-xs text-slate-400 max-w-xs mx-auto mt-0.5">
           {t('appTagline')}
         </p>

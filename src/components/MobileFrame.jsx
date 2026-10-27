@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSimulation } from '../context/SimulationContext';
+import { GreenRouteEmblem } from './Logo';
 import {
   Navigation,
   ShieldAlert,
@@ -58,8 +59,8 @@ export default function MobileFrame({ children }) {
       {/* ─── Top Control Bar (Language & View Switcher) ─── */}
       <div className="w-full max-w-md md:max-w-4xl mb-2 px-3 py-1.5 flex items-center justify-between text-xs text-slate-400">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div className="flex items-center gap-2">
+            <GreenRouteEmblem size={22} glow={false} />
             <span className="font-extrabold text-white tracking-wide">GreenRoute</span>
           </div>
           <span className="hidden sm:inline text-slate-600">|</span>
