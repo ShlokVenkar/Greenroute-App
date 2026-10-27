@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSimulation } from '../context/SimulationContext';
 import DemoMumbaiMap from '../components/DemoMumbaiMap';
 import { SEVERITY_CONFIG } from '../data/mumbaiRoutes';
@@ -8,60 +8,71 @@ import {
   VolumeX,
   Radio,
   CheckCircle2,
-  AlertTriangle,
   RotateCcw,
-  Compass,
-  MapPin,
-  Clock,
   Gauge,
   ShieldAlert,
+  ChevronDown,
   Smartphone,
+  PhoneCall,
 } from 'lucide-react';
 
 export default function DriverNavPage() {
   const { state, actions, t } = useSimulation();
+  const [showTriageMenu, setShowTriageMenu] = useState(false);
 
   const currentRoute = state.currentRoute;
-  const currentSignal = state.signals.find(s => !s.preempted) || state.signals[state.signals.length - 1];
-  const activePreemptedSignal = state.signals.find(s => s.id === state.activePreemptedSignalId);
+  const currentSignal = state.signals.find((s) => !s.preempted) || state.signals[state.signals.length - 1];
+  const activePreemptedSignal = state.signals.find((s) => s.id === state.activePreemptedSignalId);
   const sevConfig = SEVERITY_CONFIG[state.severity] || SEVERITY_CONFIG.CODE_RED;
 
-  // Format ETA seconds into M:SS
-  const formatEta = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
-  };
+  // Format ETA minutes & seconds
+  const mins = Math.max(1, Math.round(state.etaSeconds / 60));
+  const kmRemaining = (state.distanceRemainingMeters / 1000).toFixed(1);
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 text-slate-100 overflow-y-auto">
-      {/* ─── Turn-by-Turn Navigation Header (Google Maps Style) ─── */}
-      <div className="bg-emerald-600 text-white p-3.5 shadow-md flex items-center justify-between z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shrink-0">
-            <Navigation className="w-5 h-5 text-white transform -rotate-45" />
+    <div className="flex flex-col h-full bg-slate-950 text-slate-100 overflow-hidden relative">
+      {/* ─── 1. Ultra-Clean Top Turn Banner (Google Maps Navigation Style) ─── */}
+      <div className="bg-emerald-600 text-white p-3.5 shadow-xl z-20 shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shrink-0 shadow-inner">
+              <Navigation className="w-6 h-6 text-white transform -rotate-45" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-emerald-100 uppercase tracking-wide">
+                {t('nextTurn')}
+              </div>
+              <div className="text-sm sm:text-base font-extrabold tracking-tight truncate max-w-[240px] sm:max-w-md">
+                Dr. Ambedkar Rd ➔ KEM Hospital
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-emerald-100 font-bold flex items-center gap-1.5">
-              <span>{t('nextTurn')}</span>
-            </div>
-            <div className="text-sm font-extrabold tracking-tight truncate max-w-[260px] sm:max-w-md">
-              Dr. Babasaheb Ambedkar Rd ➔ KEM Hospital
-            </div>
+
+          <div className="text-right shrink-0">
+            <div className="text-base font-black leading-tight">{mins} min</div>
+            <div className="text-[11px] text-emerald-100 font-medium">{kmRemaining} km</div>
           </div>
         </div>
-        <div className="text-right shrink-0">
-          <div className="text-xs font-bold bg-emerald-700/80 px-2 py-0.5 rounded border border-emerald-500/50">
-            {formatEta(state.etaSeconds)}
+
+        {/* ─── Glanceable Ahead-of-Time Signal Status Bar ─── */}
+        <div className="mt-2.5 bg-emerald-700/80 rounded-xl px-3 py-1.5 flex items-center justify-between border border-emerald-500/50 text-xs">
+          <div className="flex items-center gap-2 truncate">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping shrink-0"></span>
+            <span className="text-emerald-100 font-medium truncate">
+              Signal Ahead:{' '}
+              <b className="text-white">
+                {activePreemptedSignal ? activePreemptedSignal.name : currentSignal?.name || 'Hindmata'}
+              </b>
+            </span>
           </div>
-          <div className="text-[10px] text-emerald-100 mt-0.5 font-medium">
-            {(state.distanceRemainingMeters / 1000).toFixed(1)} km
-          </div>
+          <span className="text-[10px] font-black tracking-wider bg-white text-emerald-800 px-2 py-0.5 rounded-md shadow-sm shrink-0">
+            🟢 GREEN WAVE ACTIVE
+          </span>
         </div>
       </div>
 
-      {/* ─── Interactive Mumbai Map (Cockpit View) ─── */}
-      <div className="relative w-full h-[320px] sm:h-[380px] shrink-0">
+      {/* ─── 2. Full Center Stage Map (Clean, Immersive & Distraction-Free) ─── */}
+      <div className="flex-1 w-full relative min-h-0">
         <DemoMumbaiMap
           vehicleLocation={state.vehicleLocation}
           vehicleHeading={state.vehicleHeading}
@@ -69,152 +80,123 @@ export default function DriverNavPage() {
           signals={state.signals}
           hospitalLocation={[19.0028, 72.8423]}
           pickupLocation={[19.0178, 72.8478]}
-          activeRouteName={currentRoute.name}
+          activeRouteName="Dadar ➔ KEM Hospital"
           preemptedSignalId={state.activePreemptedSignalId}
           severity={state.severity}
           height="100%"
         />
 
-        {/* Floating Speed HUD on map */}
-        <div className="absolute bottom-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur-md border border-slate-700 px-3 py-1.5 rounded-xl shadow-xl flex items-center gap-2">
+        {/* Floating Speed HUD over Map */}
+        <div className="absolute bottom-3 left-3 z-10 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-2xl shadow-2xl flex items-center gap-2.5">
           <Gauge className="w-4 h-4 text-emerald-400" />
-          <div>
-            <span className="text-lg font-black text-white">{state.speedKmh}</span>
-            <span className="text-[10px] text-slate-400 ml-1 font-semibold">KM/H</span>
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-black text-white font-mono">{state.speedKmh}</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase">KM/H</span>
           </div>
         </div>
 
-        {/* Siren Alert Indicator */}
-        {state.sirenOn && (
-          <div className="absolute bottom-3 right-3 z-[1000] bg-red-600/90 backdrop-blur-md border border-red-400 px-2.5 py-1.5 rounded-xl shadow-xl flex items-center gap-1.5 text-white animate-pulse">
-            <Volume2 className="w-4 h-4" />
-            <span className="text-[10px] font-black tracking-wider">SIREN ACTIVE</span>
-          </div>
-        )}
-      </div>
-
-      {/* ─── Cockpit Control Dashboard ─── */}
-      <div className="p-3.5 space-y-3 flex-1">
-        {/* Advance Signal Preemption Box */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-              <span className="text-xs font-bold text-slate-200 uppercase tracking-wide">
-                {t('preemptionStatus')}
-              </span>
-            </div>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-              {t('preemptedGreen')}
+        {/* Triage Badge Floating button */}
+        <div className="absolute bottom-3 right-3 z-10">
+          <button
+            onClick={() => setShowTriageMenu(!showTriageMenu)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold border backdrop-blur-md shadow-xl transition-all ${
+              state.severity === 'CODE_RED'
+                ? 'bg-red-600/90 text-white border-red-400'
+                : state.severity === 'CODE_AMBER'
+                ? 'bg-amber-600/90 text-white border-amber-400'
+                : 'bg-emerald-600/90 text-white border-emerald-400'
+            }`}
+          >
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>
+              {state.severity === 'CODE_RED'
+                ? 'Code Red (Critical)'
+                : state.severity === 'CODE_AMBER'
+                ? 'Code Amber (Urgent)'
+                : 'Code Yellow'}
             </span>
-          </div>
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
 
-          <div className="bg-slate-950/80 rounded-lg p-2.5 border border-slate-800/80 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] text-slate-400">{t('upcomingSignal')}</div>
-              <div className="text-sm font-bold text-white">
-                {activePreemptedSignal ? activePreemptedSignal.name : currentSignal?.name || 'Hindmata Junction'}
+          {/* Quick Triage Popover */}
+          {showTriageMenu && (
+            <div className="absolute bottom-12 right-0 w-56 bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-2xl space-y-1.5 z-30">
+              <div className="text-[10px] uppercase font-bold text-slate-400 px-2 py-0.5">
+                Set Patient Triage
               </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">
-                {activePreemptedSignal?.road || 'Dr. Ambedkar Road'}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs font-black text-emerald-400 flex items-center gap-1 justify-end">
-                <Radio className="w-3.5 h-3.5 animate-pulse" />
-                <span>WAVE LOCKED</span>
-              </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">
-                {t('clearedSignals')}: <b className="text-white">{state.clearedSignalCount} / {state.signals.length}</b>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Dynamic Severity Triage Selector */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-200 uppercase tracking-wide flex items-center gap-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              {t('severityLevel')}
-            </span>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${sevConfig.bgBadge}`}>
-              Rank #{sevConfig.priorityRank}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { id: 'CODE_RED', label: 'Code Red', desc: 'Critical (Cardiac / Trauma)', color: 'border-red-500 bg-red-500/10 text-red-300' },
-              { id: 'CODE_AMBER', label: 'Code Amber', desc: 'Urgent (Fracture / Asthma)', color: 'border-amber-500 bg-amber-500/10 text-amber-300' },
-              { id: 'CODE_YELLOW', label: 'Code Yellow', desc: 'Moderate (Transfer)', color: 'border-emerald-500 bg-emerald-500/10 text-emerald-300' },
-            ].map((sev) => (
               <button
-                key={sev.id}
-                onClick={() => actions.setSeverity(sev.id)}
-                className={`p-2 rounded-lg text-left border transition-all ${
-                  state.severity === sev.id
-                    ? `${sev.color} ring-1 ring-white/20 font-bold shadow-md`
-                    : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700'
+                onClick={() => {
+                  actions.setSeverity('CODE_RED');
+                  setShowTriageMenu(false);
+                }}
+                className={`w-full text-left p-2 rounded-xl text-xs font-bold flex items-center justify-between ${
+                  state.severity === 'CODE_RED' ? 'bg-red-600 text-white' : 'text-slate-300 hover:bg-slate-800'
                 }`}
               >
-                <div className="text-xs font-bold">{sev.label}</div>
-                <div className="text-[9px] opacity-80 truncate">{sev.desc}</div>
+                <span>Code Red (Critical)</span>
+                <span className="text-[10px] opacity-80">Cardiac/Trauma</span>
               </button>
-            ))}
-          </div>
-
-          <div className="mt-2.5 text-[11px] text-slate-400 bg-slate-950/50 p-2 rounded-lg border border-slate-800/60">
-            ℹ️ <span className="text-slate-300 font-semibold">{sevConfig.name}:</span> Preemption zone is <b>{sevConfig.preemptionRadiusMeters}m</b> with <b>{sevConfig.greenDurationSeconds}s</b> green corridor window.
-          </div>
+              <button
+                onClick={() => {
+                  actions.setSeverity('CODE_AMBER');
+                  setShowTriageMenu(false);
+                }}
+                className={`w-full text-left p-2 rounded-xl text-xs font-bold flex items-center justify-between ${
+                  state.severity === 'CODE_AMBER' ? 'bg-amber-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <span>Code Amber (Urgent)</span>
+                <span className="text-[10px] opacity-80">Fracture/Asthma</span>
+              </button>
+              <button
+                onClick={() => {
+                  actions.setSeverity('CODE_YELLOW');
+                  setShowTriageMenu(false);
+                }}
+                className={`w-full text-left p-2 rounded-xl text-xs font-bold flex items-center justify-between ${
+                  state.severity === 'CODE_YELLOW' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                <span>Code Yellow (Stable)</span>
+                <span className="text-[10px] opacity-80">Non-Critical</span>
+              </button>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Live Cockpit Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          {/* Siren Toggle */}
+      {/* ─── 3. Glanceable Bottom Cockpit Controls (Simple, Non-Cluttered) ─── */}
+      <div className="bg-slate-900/95 border-t border-slate-800 p-3 shrink-0 space-y-2">
+        <div className="flex items-center gap-2">
+          {/* Siren Button */}
           <button
             onClick={actions.toggleSiren}
-            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-2xl text-xs font-black transition-all shadow-md ${
               state.sirenOn
-                ? 'bg-red-600 hover:bg-red-500 text-white border-red-500 animate-pulse'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700'
+                ? 'bg-red-600 hover:bg-red-500 text-white animate-pulse'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
             }`}
           >
             {state.sirenOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            <span>{state.sirenOn ? t('sirenActive') : t('sirenOff')}</span>
+            <span>{state.sirenOn ? 'SIREN ACTIVE' : 'SIREN OFF'}</span>
           </button>
 
-          {/* Use Device GPS */}
-          <button
-            onClick={actions.toggleDeviceGps}
-            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all shadow-sm ${
-              state.isUsingDeviceGps
-                ? 'bg-blue-600 text-white border-blue-400'
-                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700'
-            }`}
-          >
-            <Smartphone className="w-4 h-4" />
-            <span>{state.isUsingDeviceGps ? 'Phone GPS Connected' : t('useDeviceGps')}</span>
-          </button>
-        </div>
-
-        {/* Mission Completion / Reset */}
-        <div className="pt-1">
+          {/* Arrived / Finish Mission Button */}
           {state.missionActive ? (
             <button
-              onClick={actions.completeMission}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-colors shadow-lg shadow-emerald-900/40"
+              onClick={actions.completePassage || actions.completeMission}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-2xl shadow-lg transition-all"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>{t('completeMission')} (Arrived at KEM)</span>
+              <span>ARRIVED AT KEM</span>
             </button>
           ) : (
             <button
               onClick={actions.startNewMission}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition-colors shadow-lg"
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-2xl shadow-lg transition-all"
             >
               <RotateCcw className="w-4 h-4" />
-              <span>Start New Emergency Run (Dadar ➔ KEM)</span>
+              <span>START NEW RUN</span>
             </button>
           )}
         </div>

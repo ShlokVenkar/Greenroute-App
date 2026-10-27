@@ -23,6 +23,7 @@ const DEFAULT_ROUTE = MUMBAI_ROUTES[0];
 const initialMumbaiState = {
   // Authentication & Persona
   currentUser: null, // null when logged out, or { role: 'driver' | 'citizen' | 'admin', name: string, badge: string }
+  languageChosen: false, // After login, user is prompted to choose language first
 
   // App Shell & Mode
   language: 'en', // 'en' | 'hi' | 'mr'
@@ -112,13 +113,22 @@ function mumbaiReducer(state, action) {
       return {
         ...state,
         currentUser: action.user,
+        languageChosen: false,
         activeTab: 'main',
+      };
+
+    case 'CONFIRM_LANGUAGE':
+      return {
+        ...state,
+        language: action.lang,
+        languageChosen: true,
       };
 
     case 'LOGOUT':
       return {
         ...state,
         currentUser: null,
+        languageChosen: false,
         activeTab: 'main',
       };
 
@@ -413,6 +423,7 @@ export function SimProvider({ children }) {
         },
       }),
       logout: () => dispatch({ type: 'LOGOUT' }),
+      confirmLanguage: (lang) => dispatch({ type: 'CONFIRM_LANGUAGE', lang }),
       setLanguage: (lang) => dispatch({ type: 'SET_LANGUAGE', lang }),
       toggleMobileFrame: () => dispatch({ type: 'TOGGLE_MOBILE_FRAME' }),
       setMobileFrame: (val) => dispatch({ type: 'SET_MOBILE_FRAME', value: val }),

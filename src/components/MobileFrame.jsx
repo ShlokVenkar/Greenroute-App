@@ -153,8 +153,8 @@ export default function MobileFrame({ children }) {
           </div>
         )}
 
-        {/* Logged In User Profile Bar */}
-        {user && (
+        {/* Logged In User Profile Bar (Only shown after language is selected) */}
+        {user && state.languageChosen && (
           <div className="bg-slate-900/90 border-b border-slate-800 px-3.5 py-1.5 flex items-center justify-between z-20 shrink-0">
             <div className="flex items-center gap-2 truncate">
               <div
@@ -190,8 +190,8 @@ export default function MobileFrame({ children }) {
           {children}
         </div>
 
-        {/* ─── Role-Based Bottom Navigation Bar (Only Shown When Logged In) ─── */}
-        {user && navItems.length > 0 && (
+        {/* ─── Role-Based Bottom Navigation Bar (Only Shown After Language Confirmation) ─── */}
+        {user && state.languageChosen && navItems.length > 0 && (
           <div className="bg-slate-950/95 backdrop-blur-md border-t border-slate-800/80 px-4 py-1.5 flex items-center justify-around z-30 shrink-0">
             {navItems.map((item) => {
               const Icon = item.icon;
