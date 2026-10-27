@@ -1,44 +1,33 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { SimProvider, useSimulation } from './context/SimulationContext';
-import Sidebar from './components/Sidebar';
-import OverviewPage from './pages/OverviewPage';
-import SimulatorPage from './pages/SimulatorPage';
-import RequestsPage from './pages/RequestsPage';
-import LogPage from './pages/LogPage';
-import ArchitecturePage from './pages/ArchitecturePage';
+import MobileFrame from './components/MobileFrame';
+import DriverNavPage from './pages/DriverNavPage';
+import CitizenSOSPage from './pages/CitizenSOSPage';
+import AdminTrafficPage from './pages/AdminTrafficPage';
+import HardwareBridgePage from './pages/HardwareBridgePage';
 
 function AppContent() {
-  const [activePage, setActivePage] = useState('overview');
   const { state } = useSimulation();
 
-  function renderPage() {
-    switch (activePage) {
-      case 'overview':
-        return <OverviewPage onNavigate={setActivePage} />;
-      case 'simulator':
-        return <SimulatorPage />;
-      case 'requests':
-        return <RequestsPage />;
-      case 'log':
-        return <LogPage />;
-      case 'architecture':
-        return <ArchitecturePage />;
+  function renderActiveView() {
+    switch (state.activeTab) {
+      case 'driver':
+        return <DriverNavPage />;
+      case 'citizen':
+        return <CitizenSOSPage />;
+      case 'admin':
+        return <AdminTrafficPage />;
+      case 'hardware':
+        return <HardwareBridgePage />;
       default:
-        return <OverviewPage onNavigate={setActivePage} />;
+        return <DriverNavPage />;
     }
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <Sidebar
-        activePage={activePage}
-        onNavigate={setActivePage}
-        simRunning={state.simRunning && !state.simPaused}
-      />
-      <main className="flex-1 overflow-hidden flex flex-col">
-        {renderPage()}
-      </main>
-    </div>
+    <MobileFrame>
+      {renderActiveView()}
+    </MobileFrame>
   );
 }
 

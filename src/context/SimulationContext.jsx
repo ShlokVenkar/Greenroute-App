@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useReducer, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useRef, useCallback, useEffect } from 'react';
+import { TRANSLATIONS } from '../i18n/translations';
+import { MUMBAI_ROUTES, MUMBAI_HOSPITALS, MUMBAI_PICKUP_LOCATIONS, SEVERITY_CONFIG } from '../data/mumbaiRoutes';
 import {
   SIGNAL_PHASE,
   DIRECTION_TO_EMERGENCY_PHASE,
-  getYellowPhaseFor,
   requiresPhaseChange,
   phaseLabel,
-  PHASE_GREEN_DIRECTIONS,
 } from '../simulation/signalStateMachine';
 import {
   createRequest,
@@ -17,193 +17,239 @@ import {
   DIRECTION_LABELS,
 } from '../simulation/priorityEngine';
 
-// ─── Simulation Config ────────────────────────────────────────────────────────
-export const SIM_CONFIG = {
-  YELLOW_DURATION_MS: 3000,
-  ALL_RED_DURATION_MS: 2000,
-  NORMAL_GREEN_DURATION_MS: 15000,
-};
+// Default route is Dadar to KEM Hospital
+const DEFAULT_ROUTE = MUMBAI_ROUTES[0];
 
-// ─── Event Categories ─────────────────────────────────────────────────────────
-export const EVENT_CATEGORY = {
-  SYSTEM: 'system',
-  REQUEST: 'request',
-  AUTH: 'auth',
-  PRIORITY: 'priority',
-  SIGNAL: 'signal',
-  PASSAGE: 'passage',
-  RESTORE: 'restore',
-};
+const initialMumbaiState = {
+  // App Shell & Mode
+  language: 'en', // 'en' | 'hi' | 'mr'
+  isMobileFrame: true, // Show realistic smartphone frame on desktop by default
+  activeTab: 'driver', // 'driver' | 'citizen' | 'admin' | 'hardware'
 
-// ─── Initial State ────────────────────────────────────────────────────────────
-const initialState = {
-  // Simulation control
-  simRunning: false,
+  // Mission & Driver State
+  missionActive: true,
+  sirenOn: true,
+  severity: 'CODE_RED', // 'CODE_RED' | 'CODE_AMBER' | 'CODE_YELLOW'
+  currentRoute: DEFAULT_ROUTE,
+  routeIndex: 0, // current index in pathCoordinates
+  vehicleLocation: DEFAULT_ROUTE.pathCoordinates[0],
+  vehicleHeading: 180,
+  speedKmh: 54,
+  distanceRemainingMeters: 2400,
+  etaSeconds: 270, // 4.5 mins
+  isUsingDeviceGps: false,
+
+  // Signals on current route
+  signals: DEFAULT_ROUTE.signals,
+  activePreemptedSignalId: 'SIG_101',
+  clearedSignalCount: 1,
+
+  // Citizen SOS state
+  citizenSos: {
+    requested: false,
+    dispatchedVehicleId: 'MH-01-EQ-4421',
+    driverName: 'Ramesh Shinde',
+    emergencyType: 'ambulance',
+    severity: 'CODE_RED',
+    pickupLocation: 'Dadar TT Circle, Mumbai',
+    hospitalId: 'kem',
+    etaMinutes: 4,
+  },
+
+  // Hardware Prototype Bridge State
+  hardware: {
+    connected: false,
+    baudRate: 115200,
+    port: 'COM3 (ESP32)',
+    lastPacketTime: Date.now(),
+    gpioPins: {
+      pin12: false, // North Red
+      pin13: false, // North Yellow
+      pin14: true,  // North Green (Corridor Active)
+      pin25: true,  // East Red (Hold)
+      pin26: false, // East Yellow
+      pin27: false, // East Green
+    },
+    rawTelemetry: '',
+  },
+
+  // Base Simulator State (Kept for compatibility)
+  simRunning: true,
   simPaused: false,
-
-  // Signal state
-  currentPhase: SIGNAL_PHASE.NS_GREEN,
+  currentPhase: SIGNAL_PHASE.EMERGENCY_N,
   transitioning: false,
   transitionProgress: 0,
-
-  // Requests
   requests: [],
-  activeRequestId: null,
-
-  // Event log
-  events: [],
-
-  // Metrics
-  totalRequests: 0,
+  activeRequestId: 'REQ-001',
+  events: [
+    {
+      id: 1,
+      timestamp: new Date(),
+      category: 'priority',
+      description: 'Emergency corridor activated for Ambulance MH-01-EQ-4421 towards KEM Hospital.',
+      requestId: 'REQ-001',
+    },
+    {
+      id: 2,
+      timestamp: new Date(Date.now() - 30000),
+      category: 'signal',
+      description: 'Signal SIG_101 Dadar TT locked GREEN. Cross traffic safe clearance completed.',
+      requestId: 'REQ-001',
+    },
+  ],
+  totalRequests: 1,
   completedRequests: 0,
   rejectedRequests: 0,
   totalWaitTimeMs: 0,
-
-  // Active priority panel data
-  priorityPanel: null,
 };
 
-// ─── Reducer ─────────────────────────────────────────────────────────────────
-function simReducer(state, action) {
+function mumbaiReducer(state, action) {
   switch (action.type) {
-    case 'SIM_START':
-      return { ...state, simRunning: true, simPaused: false };
+    case 'SET_LANGUAGE':
+      return { ...state, language: action.lang };
 
-    case 'SIM_PAUSE':
-      return { ...state, simPaused: true };
+    case 'TOGGLE_MOBILE_FRAME':
+      return { ...state, isMobileFrame: !state.isMobileFrame };
 
-    case 'SIM_RESUME':
-      return { ...state, simPaused: false };
+    case 'SET_MOBILE_FRAME':
+      return { ...state, isMobileFrame: action.value };
 
-    case 'SIM_RESET': {
-      resetRequestCounter();
-      return {
-        ...initialState,
-        events: [{
-          id: Date.now(),
-          timestamp: new Date(),
-          category: EVENT_CATEGORY.SYSTEM,
-          description: 'Simulation reset. System initialized.',
-          requestId: null,
-        }],
-      };
-    }
+    case 'SET_ACTIVE_TAB':
+      return { ...state, activeTab: action.tab };
 
-    case 'SET_PHASE':
+    case 'SET_SEVERITY':
+      return { ...state, severity: action.severity };
+
+    case 'TOGGLE_SIREN':
+      return { ...state, sirenOn: !state.sirenOn };
+
+    case 'SET_VEHICLE_POSITION':
       return {
         ...state,
-        currentPhase: action.phase,
-        transitioning: action.transitioning ?? false,
-        transitionProgress: action.transitionProgress ?? 0,
+        vehicleLocation: action.location,
+        vehicleHeading: action.heading ?? state.vehicleHeading,
+        speedKmh: action.speedKmh ?? state.speedKmh,
+        routeIndex: action.routeIndex ?? state.routeIndex,
+        distanceRemainingMeters: action.distanceRemainingMeters ?? state.distanceRemainingMeters,
+        etaSeconds: action.etaSeconds ?? state.etaSeconds,
       };
 
-    case 'SET_TRANSITION_PROGRESS':
-      return { ...state, transitionProgress: action.progress };
+    case 'SET_SIGNALS':
+      return { ...state, signals: action.signals };
 
-    case 'ADD_REQUEST': {
-      const req = action.request;
+    case 'SET_PREEMPTED_SIGNAL':
       return {
         ...state,
-        requests: [...state.requests, req],
-        totalRequests: state.totalRequests + 1,
-      };
-    }
-
-    case 'UPDATE_REQUEST': {
-      return {
-        ...state,
-        requests: state.requests.map(r =>
-          r.id === action.id ? { ...r, ...action.updates } : r
+        activePreemptedSignalId: action.signalId,
+        signals: state.signals.map(s =>
+          s.id === action.signalId
+            ? { ...s, preempted: true, currentPhase: 'GREEN' }
+            : s
         ),
       };
-    }
 
-    case 'SET_ACTIVE_REQUEST':
-      return { ...state, activeRequestId: action.id };
+    case 'INCREMENT_CLEARED_SIGNALS':
+      return { ...state, clearedSignalCount: state.clearedSignalCount + 1 };
 
-    case 'COMPLETE_REQUEST': {
-      const req = state.requests.find(r => r.id === action.id);
-      const waitMs = req ? Date.now() - req.createdAt : 0;
+    case 'SET_ROUTE':
       return {
         ...state,
-        activeRequestId: state.activeRequestId === action.id ? null : state.activeRequestId,
-        completedRequests: state.completedRequests + 1,
-        totalWaitTimeMs: state.totalWaitTimeMs + waitMs,
-        requests: state.requests.map(r =>
-          r.id === action.id
-            ? { ...r, status: REQUEST_STATUS.COMPLETED, completedAt: Date.now() }
-            : r
-        ),
+        currentRoute: action.route,
+        routeIndex: 0,
+        vehicleLocation: action.route.pathCoordinates[0],
+        signals: action.route.signals,
+        distanceRemainingMeters: action.route.totalDistanceKm * 1000,
+        etaSeconds: action.route.estimatedGreenRouteMinutes * 60,
       };
-    }
 
-    case 'REJECT_REQUEST':
+    case 'COMPLETE_MISSION':
       return {
         ...state,
-        rejectedRequests: state.rejectedRequests + 1,
-        requests: state.requests.map(r =>
-          r.id === action.id
-            ? { ...r, status: REQUEST_STATUS.REJECTED }
-            : r
-        ),
+        missionActive: false,
+        speedKmh: 0,
+        distanceRemainingMeters: 0,
+        etaSeconds: 0,
+        activePreemptedSignalId: null,
+      };
+
+    case 'START_NEW_MISSION':
+      return {
+        ...state,
+        missionActive: true,
+        routeIndex: 0,
+        vehicleLocation: state.currentRoute.pathCoordinates[0],
+        speedKmh: 54,
+        distanceRemainingMeters: state.currentRoute.totalDistanceKm * 1000,
+        etaSeconds: state.currentRoute.estimatedGreenRouteMinutes * 60,
+        activePreemptedSignalId: state.signals[0]?.id || null,
+      };
+
+    case 'SUBMIT_CITIZEN_SOS':
+      return {
+        ...state,
+        citizenSos: {
+          ...state.citizenSos,
+          requested: true,
+          emergencyType: action.payload.emergencyType,
+          severity: action.payload.severity,
+          pickupLocation: action.payload.pickupLocation,
+          hospitalId: action.payload.hospitalId,
+          etaMinutes: 4,
+        },
+        severity: action.payload.severity,
+        missionActive: true,
+        activeTab: 'citizen',
+      };
+
+    case 'SET_DEVICE_GPS':
+      return { ...state, isUsingDeviceGps: action.enabled };
+
+    case 'UPDATE_HARDWARE_PINS':
+      return {
+        ...state,
+        hardware: {
+          ...state.hardware,
+          gpioPins: { ...state.hardware.gpioPins, ...action.pins },
+          lastPacketTime: Date.now(),
+        },
+      };
+
+    case 'TOGGLE_HARDWARE_CONNECTION':
+      return {
+        ...state,
+        hardware: {
+          ...state.hardware,
+          connected: !state.hardware.connected,
+        },
       };
 
     case 'ADD_EVENT':
       return {
         ...state,
-        events: [action.event, ...state.events].slice(0, 200),
+        events: [action.event, ...state.events].slice(0, 100),
       };
-
-    case 'CLEAR_EVENTS':
-      return { ...state, events: [] };
-
-    case 'SET_PRIORITY_PANEL':
-      return { ...state, priorityPanel: action.data };
 
     default:
       return state;
   }
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
 const SimContext = createContext(null);
 
 export function SimProvider({ children }) {
-  const [state, dispatch] = useReducer(simReducer, {
-    ...initialState,
-    events: [{
-      id: Date.now(),
-      timestamp: new Date(),
-      category: EVENT_CATEGORY.SYSTEM,
-      description: 'GreenRoute simulation initialized. System ready.',
-      requestId: null,
-    }],
-  });
-
+  const [state, dispatch] = useReducer(mumbaiReducer, initialMumbaiState);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const navIntervalRef = useRef(null);
 
-  const transitionTimerRef = useRef(null);
-  const normalCycleTimerRef = useRef(null);
-  const progressTimerRef = useRef(null);
-
-  const clearAllTimers = useCallback(() => {
-    if (transitionTimerRef.current) {
-      clearTimeout(transitionTimerRef.current);
-      transitionTimerRef.current = null;
-    }
-    if (normalCycleTimerRef.current) {
-      clearTimeout(normalCycleTimerRef.current);
-      normalCycleTimerRef.current = null;
-    }
-    if (progressTimerRef.current) {
-      clearInterval(progressTimerRef.current);
-      progressTimerRef.current = null;
-    }
-  }, []);
+  // Helper to get translated string
+  const t = useCallback((key) => {
+    const lang = state.language;
+    return TRANSLATIONS[lang]?.[key] || TRANSLATIONS.en[key] || key;
+  }, [state.language]);
 
   // Log an event
-  const logEvent = useCallback((category, description, requestId = null) => {
+  const logEvent = useCallback((category, description, requestId = 'REQ-001') => {
     dispatch({
       type: 'ADD_EVENT',
       event: {
@@ -216,297 +262,142 @@ export function SimProvider({ children }) {
     });
   }, []);
 
-  // Animate transition progress
-  const animateProgress = useCallback((durationMs, onComplete) => {
-    const startTime = Date.now();
-    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-    progressTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / durationMs, 1);
-      dispatch({ type: 'SET_TRANSITION_PROGRESS', progress });
-      if (progress >= 1) {
-        clearInterval(progressTimerRef.current);
-        progressTimerRef.current = null;
-        onComplete?.();
-      }
-    }, 50);
-  }, []);
+  // Distance calculation helper (Haversine formula in meters)
+  const calculateDistanceMeters = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // Earth radius in meters
+    const phi1 = (lat1 * Math.PI) / 180;
+    const phi2 = (lat2 * Math.PI) / 180;
+    const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+    const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
 
-  // Normal signal cycle (simple alternating)
-  const startNormalCycle = useCallback(() => {
-    clearAllTimers();
-    const cycle = () => {
-      if (!stateRef.current.simRunning || stateRef.current.simPaused) return;
-      if (stateRef.current.activeRequestId) return; // don't cycle during emergency
+    const a =
+      Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+      Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
-      const cur = stateRef.current.currentPhase;
-      let yellowPhase, nextGreen;
-      if (cur === SIGNAL_PHASE.NS_GREEN) {
-        yellowPhase = SIGNAL_PHASE.NS_YELLOW;
-        nextGreen = SIGNAL_PHASE.EW_GREEN;
-      } else if (cur === SIGNAL_PHASE.EW_GREEN) {
-        yellowPhase = SIGNAL_PHASE.EW_YELLOW;
-        nextGreen = SIGNAL_PHASE.NS_GREEN;
-      } else {
-        return; // in a special phase, don't override
-      }
+  // Automated GPS Navigation & Signal Preemption Loop
+  useEffect(() => {
+    if (!state.missionActive || state.isUsingDeviceGps) return;
 
-      dispatch({ type: 'SET_PHASE', phase: yellowPhase, transitioning: true });
-      logEvent(EVENT_CATEGORY.SIGNAL, `Routine cycle: ${phaseLabel(yellowPhase)}`);
+    navIntervalRef.current = setInterval(() => {
+      const curState = stateRef.current;
+      const coords = curState.currentRoute.pathCoordinates;
+      let nextIdx = curState.routeIndex + 1;
 
-      transitionTimerRef.current = setTimeout(() => {
-        dispatch({ type: 'SET_PHASE', phase: SIGNAL_PHASE.ALL_RED, transitioning: true });
-        logEvent(EVENT_CATEGORY.SIGNAL, 'All-red clearance interval');
-
-        transitionTimerRef.current = setTimeout(() => {
-          dispatch({ type: 'SET_PHASE', phase: nextGreen, transitioning: false });
-          logEvent(EVENT_CATEGORY.SIGNAL, `Routine cycle: ${phaseLabel(nextGreen)}`);
-          normalCycleTimerRef.current = setTimeout(cycle, SIM_CONFIG.NORMAL_GREEN_DURATION_MS);
-        }, SIM_CONFIG.ALL_RED_DURATION_MS);
-      }, SIM_CONFIG.YELLOW_DURATION_MS);
-    };
-
-    normalCycleTimerRef.current = setTimeout(cycle, SIM_CONFIG.NORMAL_GREEN_DURATION_MS);
-  }, [clearAllTimers, logEvent]);
-
-  // Execute emergency priority transition sequence
-  const executeEmergencyTransition = useCallback((request) => {
-    const currentState = stateRef.current;
-    const targetPhase = DIRECTION_TO_EMERGENCY_PHASE[request.direction];
-    const currentPhase = currentState.currentPhase;
-
-    // Check if phase change is needed
-    const needsChange = requiresPhaseChange(currentPhase, request.direction);
-
-    if (!needsChange) {
-      // Already in compatible phase — activate immediately
-      dispatch({ type: 'SET_PHASE', phase: targetPhase, transitioning: false });
-      dispatch({ type: 'SET_ACTIVE_REQUEST', id: request.id });
-      dispatch({
-        type: 'UPDATE_REQUEST',
-        id: request.id,
-        updates: { status: REQUEST_STATUS.ACTIVE },
-      });
-      dispatch({
-        type: 'SET_PRIORITY_PANEL',
-        data: {
-          requestId: request.id,
-          vehicleType: request.vehicleType,
-          direction: request.direction,
-          phase: targetPhase,
-          status: 'active',
-          nextAction: 'Awaiting vehicle passage confirmation.',
-        },
-      });
-      logEvent(EVENT_CATEGORY.SIGNAL, `Emergency priority activated — ${phaseLabel(targetPhase)}`, request.id);
-      return;
-    }
-
-    // Step 1: Yellow transition
-    const yellowPhase = currentPhase === SIGNAL_PHASE.NS_GREEN || currentPhase === SIGNAL_PHASE.EMERGENCY_N || currentPhase === SIGNAL_PHASE.EMERGENCY_S
-      ? SIGNAL_PHASE.NS_YELLOW
-      : SIGNAL_PHASE.EW_YELLOW;
-
-    dispatch({ type: 'SET_PHASE', phase: yellowPhase, transitioning: true, transitionProgress: 0 });
-    logEvent(EVENT_CATEGORY.SIGNAL, `Yellow transition started — ${phaseLabel(yellowPhase)}`, request.id);
-
-    dispatch({
-      type: 'SET_PRIORITY_PANEL',
-      data: {
-        requestId: request.id,
-        vehicleType: request.vehicleType,
-        direction: request.direction,
-        phase: yellowPhase,
-        status: 'transitioning',
-        nextAction: 'Executing yellow clearance interval.',
-      },
-    });
-
-    animateProgress(SIM_CONFIG.YELLOW_DURATION_MS, null);
-
-    transitionTimerRef.current = setTimeout(() => {
-      // Step 2: All-red clearance
-      dispatch({ type: 'SET_PHASE', phase: SIGNAL_PHASE.ALL_RED, transitioning: true, transitionProgress: 0 });
-      logEvent(EVENT_CATEGORY.SIGNAL, 'All-red clearance interval started.', request.id);
-      dispatch({
-        type: 'SET_PRIORITY_PANEL',
-        data: {
-          requestId: request.id,
-          vehicleType: request.vehicleType,
-          direction: request.direction,
-          phase: SIGNAL_PHASE.ALL_RED,
-          status: 'clearing',
-          nextAction: 'All-red clearance — intersection clearing.',
-        },
-      });
-
-      animateProgress(SIM_CONFIG.ALL_RED_DURATION_MS, null);
-
-      transitionTimerRef.current = setTimeout(() => {
-        // Step 3: Emergency priority phase
-        dispatch({ type: 'SET_PHASE', phase: targetPhase, transitioning: false, transitionProgress: 0 });
-        dispatch({ type: 'SET_ACTIVE_REQUEST', id: request.id });
-        dispatch({
-          type: 'UPDATE_REQUEST',
-          id: request.id,
-          updates: { status: REQUEST_STATUS.ACTIVE },
-        });
-        dispatch({
-          type: 'SET_PRIORITY_PANEL',
-          data: {
-            requestId: request.id,
-            vehicleType: request.vehicleType,
-            direction: request.direction,
-            phase: targetPhase,
-            status: 'active',
-            nextAction: 'Awaiting vehicle passage confirmation.',
-          },
-        });
-        logEvent(EVENT_CATEGORY.SIGNAL, `Emergency priority activated — ${phaseLabel(targetPhase)}`, request.id);
-        logEvent(EVENT_CATEGORY.PASSAGE, `${VEHICLE_LABELS[request.vehicleType]} approaching from ${DIRECTION_LABELS[request.direction]}. Awaiting passage.`, request.id);
-      }, SIM_CONFIG.ALL_RED_DURATION_MS);
-    }, SIM_CONFIG.YELLOW_DURATION_MS);
-  }, [animateProgress, logEvent]);
-
-  // Submit a new emergency request
-  const submitRequest = useCallback(({ vehicleType, direction, estimatedArrival, authorized }) => {
-    const currentState = stateRef.current;
-    const request = createRequest({ vehicleType, direction, estimatedArrival, authorized });
-
-    dispatch({ type: 'ADD_REQUEST', request });
-    logEvent(EVENT_CATEGORY.REQUEST, `Emergency request received: ${VEHICLE_LABELS[vehicleType]} from ${DIRECTION_LABELS[direction]}.`, request.id);
-
-    // Validate authorization
-    dispatch({
-      type: 'UPDATE_REQUEST',
-      id: request.id,
-      updates: { status: REQUEST_STATUS.VALIDATING },
-    });
-    logEvent(EVENT_CATEGORY.AUTH, `Authorization check in progress for ${request.id}.`, request.id);
-
-    setTimeout(() => {
-      if (!authorized) {
-        dispatch({ type: 'REJECT_REQUEST', id: request.id });
-        dispatch({
-          type: 'UPDATE_REQUEST',
-          id: request.id,
-          updates: {
-            priorityDecision: 'Request rejected — authorization check failed.',
-          },
-        });
-        logEvent(EVENT_CATEGORY.AUTH, `Authorization FAILED for ${request.id}. Request rejected.`, request.id);
+      if (nextIdx >= coords.length) {
+        // Mission complete!
+        dispatch({ type: 'COMPLETE_MISSION' });
+        logEvent('passage', 'Ambulance successfully reached KEM Hospital Emergency Casualty.');
+        clearInterval(navIntervalRef.current);
         return;
       }
 
-      logEvent(EVENT_CATEGORY.AUTH, `Authorization PASSED for ${request.id}.`, request.id);
+      const nextLoc = coords[nextIdx];
+      const prevLoc = coords[curState.routeIndex];
 
-      // Check for active request
-      const active = currentState.activeRequestId;
-      const waitingRequests = stateRef.current.requests.filter(
-        r => r.id !== request.id && r.authorized && r.status === REQUEST_STATUS.WAITING
-      );
-      const competing = stateRef.current.requests.filter(
-        r => r.id !== request.id && r.status === REQUEST_STATUS.ACTIVE
-      );
+      // Calculate bearing
+      const y = Math.sin((nextLoc[1] - prevLoc[1]) * Math.PI / 180) * Math.cos(nextLoc[0] * Math.PI / 180);
+      const x =
+        Math.cos(prevLoc[0] * Math.PI / 180) * Math.sin(nextLoc[0] * Math.PI / 180) -
+        Math.sin(prevLoc[0] * Math.PI / 180) * Math.cos(nextLoc[0] * Math.PI / 180) * Math.cos((nextLoc[1] - prevLoc[1]) * Math.PI / 180);
+      const bearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 
-      const decision = generatePriorityDecision(request, 1 + waitingRequests.length, competing);
+      // Calculate remaining route distance
+      let remainingDist = 0;
+      for (let i = nextIdx; i < coords.length - 1; i++) {
+        remainingDist += calculateDistanceMeters(coords[i][0], coords[i][1], coords[i + 1][0], coords[i + 1][1]);
+      }
+      const speed = Math.floor(48 + Math.random() * 12); // 48 - 60 km/h
+      const remainingSeconds = Math.max(10, Math.round((remainingDist / (speed * 1000 / 3600))));
 
       dispatch({
-        type: 'UPDATE_REQUEST',
-        id: request.id,
-        updates: { priorityDecision: decision, status: REQUEST_STATUS.WAITING },
+        type: 'SET_VEHICLE_POSITION',
+        location: nextLoc,
+        heading: Math.round(bearing),
+        speedKmh: speed,
+        routeIndex: nextIdx,
+        distanceRemainingMeters: Math.round(remainingDist),
+        etaSeconds: remainingSeconds,
       });
-      logEvent(EVENT_CATEGORY.PRIORITY, `Priority decision: ${decision}`, request.id);
 
-      // If no active request, serve immediately
-      if (!stateRef.current.activeRequestId) {
-        executeEmergencyTransition({ ...request, status: REQUEST_STATUS.WAITING, priorityDecision: decision });
-      }
-    }, 800); // Brief simulated validation delay
-  }, [logEvent, executeEmergencyTransition]);
+      // Signal Preemption Check
+      const sevConfig = SEVERITY_CONFIG[curState.severity] || SEVERITY_CONFIG.CODE_RED;
+      const preemptionRadius = sevConfig.preemptionRadiusMeters;
 
-  // Complete vehicle passage
-  const completePassage = useCallback(() => {
-    const currentState = stateRef.current;
-    const activeId = currentState.activeRequestId;
-    if (!activeId) return;
+      curState.signals.forEach(sig => {
+        const distToSig = calculateDistanceMeters(nextLoc[0], nextLoc[1], sig.lat, sig.lng);
 
-    const activeReq = currentState.requests.find(r => r.id === activeId);
-    if (!activeReq) return;
+        if (distToSig <= preemptionRadius && !sig.preempted) {
+          // Preempt this signal!
+          dispatch({ type: 'SET_PREEMPTED_SIGNAL', signalId: sig.id });
+          dispatch({ type: 'INCREMENT_CLEARED_SIGNALS' });
+          logEvent('signal', `Advance Preemption: ${sig.name} (${sig.road}) cleared to GREEN for incoming ambulance. Distance: ${Math.round(distToSig)}m.`);
 
-    logEvent(EVENT_CATEGORY.PASSAGE, `${VEHICLE_LABELS[activeReq.vehicleType]} passage completed from ${DIRECTION_LABELS[activeReq.direction]}.`, activeId);
-    dispatch({ type: 'COMPLETE_REQUEST', id: activeId });
+          // Update Hardware GPIO outputs
+          dispatch({
+            type: 'UPDATE_HARDWARE_PINS',
+            pins: {
+              pin12: false, // North Red OFF
+              pin13: false, // North Yellow OFF
+              pin14: true,  // North Green ON
+              pin25: true,  // East Red ON (Hold cross-traffic)
+              pin26: false, // East Yellow OFF
+              pin27: false, // East Green OFF
+            },
+          });
+        }
+      });
+    }, 2500);
 
-    clearAllTimers();
+    return () => {
+      if (navIntervalRef.current) clearInterval(navIntervalRef.current);
+    };
+  }, [state.missionActive, state.isUsingDeviceGps, logEvent]);
 
-    // All-red after passage
-    dispatch({ type: 'SET_PHASE', phase: SIGNAL_PHASE.ALL_RED, transitioning: true });
-    logEvent(EVENT_CATEGORY.SIGNAL, 'Post-passage all-red clearance.', activeId);
-
-    transitionTimerRef.current = setTimeout(() => {
-      // Check for waiting requests
-      const nextReq = selectNextRequest(stateRef.current.requests);
-      if (nextReq) {
-        logEvent(EVENT_CATEGORY.PRIORITY, `Serving next queued request: ${nextReq.id}`, nextReq.id);
-        executeEmergencyTransition(nextReq);
+  // Physical Device GPS integration
+  const toggleDeviceGps = useCallback(() => {
+    if (state.isUsingDeviceGps) {
+      dispatch({ type: 'SET_DEVICE_GPS', enabled: false });
+    } else {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            dispatch({ type: 'SET_DEVICE_GPS', enabled: true });
+            dispatch({
+              type: 'SET_VEHICLE_POSITION',
+              location: [pos.coords.latitude, pos.coords.longitude],
+              speedKmh: Math.round((pos.coords.speed || 0) * 3.6),
+            });
+            logEvent('system', `Connected to device live GPS hardware: [${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}]`);
+          },
+          (err) => {
+            alert('Could not access live device GPS: ' + err.message);
+          }
+        );
       } else {
-        // Restore normal operation
-        dispatch({ type: 'SET_PHASE', phase: SIGNAL_PHASE.NS_GREEN, transitioning: false });
-        dispatch({ type: 'SET_PRIORITY_PANEL', data: null });
-        logEvent(EVENT_CATEGORY.RESTORE, 'Normal traffic operation restored.');
-        startNormalCycle();
+        alert('Geolocation is not supported by your browser.');
       }
-    }, SIM_CONFIG.ALL_RED_DURATION_MS);
-  }, [logEvent, clearAllTimers, executeEmergencyTransition, startNormalCycle]);
-
-  // Start simulation
-  const startSim = useCallback(() => {
-    dispatch({ type: 'SIM_START' });
-    logEvent(EVENT_CATEGORY.SYSTEM, 'Simulation started. Normal signal cycle active.');
-    startNormalCycle();
-  }, [logEvent, startNormalCycle]);
-
-  // Pause simulation
-  const pauseSim = useCallback(() => {
-    dispatch({ type: 'SIM_PAUSE' });
-    clearAllTimers();
-    logEvent(EVENT_CATEGORY.SYSTEM, 'Simulation paused.');
-  }, [clearAllTimers, logEvent]);
-
-  // Resume simulation
-  const resumeSim = useCallback(() => {
-    dispatch({ type: 'SIM_RESUME' });
-    logEvent(EVENT_CATEGORY.SYSTEM, 'Simulation resumed.');
-    if (!stateRef.current.activeRequestId) {
-      startNormalCycle();
     }
-  }, [logEvent, startNormalCycle]);
-
-  // Reset simulation
-  const resetSim = useCallback(() => {
-    clearAllTimers();
-    dispatch({ type: 'SIM_RESET' });
-  }, [clearAllTimers]);
-
-  const clearEvents = useCallback(() => {
-    dispatch({ type: 'CLEAR_EVENTS' });
-  }, []);
-
-  const avgWaitTime = state.completedRequests > 0
-    ? Math.round(state.totalWaitTimeMs / state.completedRequests / 1000)
-    : 0;
+  }, [state.isUsingDeviceGps, logEvent]);
 
   const value = {
     state,
-    avgWaitTime,
+    t,
     actions: {
-      startSim,
-      pauseSim,
-      resumeSim,
-      resetSim,
-      submitRequest,
-      completePassage,
-      clearEvents,
+      setLanguage: (lang) => dispatch({ type: 'SET_LANGUAGE', lang }),
+      toggleMobileFrame: () => dispatch({ type: 'TOGGLE_MOBILE_FRAME' }),
+      setMobileFrame: (val) => dispatch({ type: 'SET_MOBILE_FRAME', value: val }),
+      setActiveTab: (tab) => dispatch({ type: 'SET_ACTIVE_TAB', tab }),
+      setSeverity: (severity) => dispatch({ type: 'SET_SEVERITY', severity }),
+      toggleSiren: () => dispatch({ type: 'TOGGLE_SIREN' }),
+      completeMission: () => dispatch({ type: 'COMPLETE_MISSION' }),
+      startNewMission: () => dispatch({ type: 'START_NEW_MISSION' }),
+      submitCitizenSos: (payload) => dispatch({ type: 'SUBMIT_CITIZEN_SOS', payload }),
+      toggleDeviceGps,
+      toggleHardwareConnection: () => dispatch({ type: 'TOGGLE_HARDWARE_CONNECTION' }),
+      logEvent,
     },
   };
 
