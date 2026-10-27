@@ -12,6 +12,9 @@ import {
   Battery,
   Wifi,
   Radio,
+  LogOut,
+  User,
+  HeartPulse,
 } from 'lucide-react';
 
 export default function MobileFrame({ children }) {
@@ -30,12 +33,25 @@ export default function MobileFrame({ children }) {
     return () => clearInterval(interval);
   }, []);
 
-  const navItems = [
-    { id: 'driver', label: t('navDriver'), icon: Navigation, activeColor: 'text-emerald-400' },
-    { id: 'citizen', label: t('navCitizen'), icon: ShieldAlert, activeColor: 'text-red-400' },
-    { id: 'admin', label: t('navAdmin'), icon: Activity, activeColor: 'text-blue-400' },
-    { id: 'hardware', label: t('navHardware'), icon: Cpu, activeColor: 'text-purple-400' },
-  ];
+  const user = state.currentUser;
+
+  // Build role-specific navigation items
+  let navItems = [];
+  if (user?.role === 'driver') {
+    navItems = [
+      { id: 'main', label: 'Driver Cockpit', icon: Navigation, activeColor: 'text-emerald-400' },
+      { id: 'hardware', label: 'Hardware IoT', icon: Cpu, activeColor: 'text-purple-400' },
+    ];
+  } else if (user?.role === 'citizen') {
+    navItems = [
+      { id: 'main', label: 'Citizen SOS', icon: ShieldAlert, activeColor: 'text-red-400' },
+    ];
+  } else if (user?.role === 'admin') {
+    navItems = [
+      { id: 'main', label: 'Traffic Control', icon: Activity, activeColor: 'text-blue-400' },
+      { id: 'hardware', label: 'Hardware IoT', icon: Cpu, activeColor: 'text-purple-400' },
+    ];
+  }
 
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center p-0 md:p-4 select-none">
@@ -47,7 +63,7 @@ export default function MobileFrame({ children }) {
             <span className="font-extrabold text-white tracking-wide">GreenRoute</span>
           </div>
           <span className="hidden sm:inline text-slate-600">|</span>
-          <span className="hidden sm:inline text-[11px] text-slate-400">Mumbai Smart Traffic System</span>
+          <span className="hidden sm:inline text-[11px] text-slate-400">Mumbai Smart Traffic</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -137,45 +153,85 @@ export default function MobileFrame({ children }) {
           </div>
         )}
 
+        {/* Logged In User Profile Bar */}
+        {user && (
+          <div className="bg-slate-900/90 border-b border-slate-800 px-3.5 py-1.5 flex items-center justify-between z-20 shrink-0">
+            <div className="flex items-center gap-2 truncate">
+              <div
+                className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold border ${
+                  user.role === 'driver'
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                    : user.role === 'citizen'
+                    ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                    : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                }`}
+              >
+                {user.role === 'driver' ? '🚑' : user.role === 'citizen' ? '🆘' : '👮'}
+              </div>
+              <div className="truncate">
+                <div className="text-xs font-bold text-white truncate">{user.name}</div>
+                <div className="text-[9px] text-slate-400 uppercase font-mono">{user.badge}</div>
+              </div>
+            </div>
+
+            <button
+              onClick={actions.logout}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-800 hover:bg-red-950/40 hover:text-red-400 text-slate-300 border border-slate-700 text-[10px] font-semibold transition-colors shrink-0"
+              title="Logout and switch persona"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Switch Role</span>
+            </button>
+          </div>
+        )}
+
         {/* ─── Page Viewport Content ─── */}
         <div className="flex-1 overflow-hidden relative flex flex-col">
           {children}
         </div>
 
-        {/* ─── Native Bottom Navigation Bar ─── */}
-        <div className="bg-slate-950/95 backdrop-blur-md border-t border-slate-800/80 px-2 py-1.5 flex items-center justify-around z-30 shrink-0">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = state.activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => actions.setActiveTab(item.id)}
-                className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all relative ${
-                  isActive
-                    ? `${item.activeColor} font-bold scale-105`
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <div className="relative">
-                  <Icon className="w-5 h-5" />
-                  {item.id === 'driver' && state.missionActive && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        {/* ─── Role-Based Bottom Navigation Bar (Only Shown When Logged In) ─── */}
+        {user && navItems.length > 0 && (
+          <div className="bg-slate-950/95 backdrop-blur-md border-t border-slate-800/80 px-4 py-1.5 flex items-center justify-around z-30 shrink-0">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = state.activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => actions.setActiveTab(item.id)}
+                  className={`flex flex-col items-center justify-center py-1 px-4 rounded-xl transition-all relative ${
+                    isActive
+                      ? `${item.activeColor} font-bold scale-105`
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="relative">
+                    <Icon className="w-5 h-5" />
+                    {item.id === 'main' && user.role === 'driver' && state.missionActive && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    )}
+                  </div>
+                  <span className="text-[10px] mt-1 tracking-tight font-medium">
+                    {item.label}
+                  </span>
+                  {isActive && (
+                    <span className="absolute -bottom-1 w-6 h-0.5 rounded-full bg-current opacity-80"></span>
                   )}
-                  {item.id === 'citizen' && state.citizenSos.requested && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500"></span>
-                  )}
-                </div>
-                <span className="text-[10px] mt-1 tracking-tight font-medium">
-                  {item.label}
-                </span>
-                {isActive && (
-                  <span className="absolute -bottom-1 w-6 h-0.5 rounded-full bg-current opacity-80"></span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+                </button>
+              );
+            })}
+
+            {/* Quick Switch Role button in bottom bar */}
+            <button
+              onClick={actions.logout}
+              className="flex flex-col items-center justify-center py-1 px-4 rounded-xl text-slate-400 hover:text-red-400 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-[10px] mt-1 tracking-tight font-medium">Logout</span>
+            </button>
+          </div>
+        )}
 
         {/* Bottom Home Indicator Bar (iOS style) */}
         {state.isMobileFrame && (

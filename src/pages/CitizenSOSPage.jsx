@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSimulation } from '../context/SimulationContext';
 import { MUMBAI_HOSPITALS, MUMBAI_PICKUP_LOCATIONS } from '../data/mumbaiRoutes';
-import MumbaiMap from '../components/MumbaiMap';
+import DemoMumbaiMap from '../components/DemoMumbaiMap';
 import {
   PhoneCall,
   ShieldAlert,
@@ -137,7 +137,7 @@ export default function CitizenSOSPage() {
                 <span className="text-[10px] text-slate-400 font-medium">GPS Updated 2s ago</span>
               </div>
               <div className="h-[220px] rounded-xl overflow-hidden">
-                <MumbaiMap
+                <DemoMumbaiMap
                   vehicleLocation={state.vehicleLocation}
                   vehicleHeading={state.vehicleHeading}
                   routeCoordinates={state.currentRoute.pathCoordinates}

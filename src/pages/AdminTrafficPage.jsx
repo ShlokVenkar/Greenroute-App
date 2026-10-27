@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSimulation } from '../context/SimulationContext';
-import MumbaiMap from '../components/MumbaiMap';
+import DemoMumbaiMap from '../components/DemoMumbaiMap';
 import {
   ShieldAlert,
   Radio,
@@ -123,7 +123,7 @@ export default function AdminTrafficPage() {
             </span>
           </div>
           <div className="h-[240px] rounded-xl overflow-hidden">
-            <MumbaiMap
+            <DemoMumbaiMap
               vehicleLocation={state.vehicleLocation}
               vehicleHeading={state.vehicleHeading}
               routeCoordinates={state.currentRoute.pathCoordinates}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSimulation } from '../context/SimulationContext';
-import MumbaiMap from '../components/MumbaiMap';
+import DemoMumbaiMap from '../components/DemoMumbaiMap';
 import { SEVERITY_CONFIG } from '../data/mumbaiRoutes';
 import {
   Navigation,
@@ -62,7 +62,7 @@ export default function DriverNavPage() {
 
       {/* ─── Interactive Mumbai Map (Cockpit View) ─── */}
       <div className="relative w-full h-[320px] sm:h-[380px] shrink-0">
-        <MumbaiMap
+        <DemoMumbaiMap
           vehicleLocation={state.vehicleLocation}
           vehicleHeading={state.vehicleHeading}
           routeCoordinates={currentRoute.pathCoordinates}

@@ -21,10 +21,13 @@ import {
 const DEFAULT_ROUTE = MUMBAI_ROUTES[0];
 
 const initialMumbaiState = {
+  // Authentication & Persona
+  currentUser: null, // null when logged out, or { role: 'driver' | 'citizen' | 'admin', name: string, badge: string }
+
   // App Shell & Mode
   language: 'en', // 'en' | 'hi' | 'mr'
   isMobileFrame: true, // Show realistic smartphone frame on desktop by default
-  activeTab: 'driver', // 'driver' | 'citizen' | 'admin' | 'hardware'
+  activeTab: 'main', // Sub-tab within current role
 
   // Mission & Driver State
   missionActive: true,
@@ -105,6 +108,20 @@ const initialMumbaiState = {
 
 function mumbaiReducer(state, action) {
   switch (action.type) {
+    case 'LOGIN':
+      return {
+        ...state,
+        currentUser: action.user,
+        activeTab: 'main',
+      };
+
+    case 'LOGOUT':
+      return {
+        ...state,
+        currentUser: null,
+        activeTab: 'main',
+      };
+
     case 'SET_LANGUAGE':
       return { ...state, language: action.lang };
 
@@ -386,6 +403,16 @@ export function SimProvider({ children }) {
     state,
     t,
     actions: {
+      login: (role, userDetails) => dispatch({
+        type: 'LOGIN',
+        user: {
+          role,
+          name: userDetails?.name || (role === 'driver' ? 'Ramesh Shinde' : role === 'citizen' ? 'Citizen of Mumbai' : 'Insp. Sanjay Deshmukh'),
+          badge: userDetails?.badge || (role === 'driver' ? 'AMB-MH01-4421' : role === 'citizen' ? 'Citizen SOS' : 'TMC-Worli-HQ'),
+          ...userDetails,
+        },
+      }),
+      logout: () => dispatch({ type: 'LOGOUT' }),
       setLanguage: (lang) => dispatch({ type: 'SET_LANGUAGE', lang }),
       toggleMobileFrame: () => dispatch({ type: 'TOGGLE_MOBILE_FRAME' }),
       setMobileFrame: (val) => dispatch({ type: 'SET_MOBILE_FRAME', value: val }),
