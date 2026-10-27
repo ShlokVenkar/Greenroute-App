@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSimulation } from '../context/SimulationContext';
-import DemoMumbaiMap from '../components/DemoMumbaiMap';
+import MumbaiMap from '../components/MumbaiMap';
 import { SEVERITY_CONFIG } from '../data/mumbaiRoutes';
 import {
   Navigation,
@@ -71,9 +71,9 @@ export default function DriverNavPage() {
         </div>
       </div>
 
-      {/* ─── 2. Full Center Stage Map (Clean, Immersive & Distraction-Free) ─── */}
+      {/* ─── 2. Full Center Stage Map (Clean, Immersive & Distraction-Free OpenStreetMap) ─── */}
       <div className="flex-1 w-full relative min-h-0">
-        <DemoMumbaiMap
+        <MumbaiMap
           vehicleLocation={state.vehicleLocation}
           vehicleHeading={state.vehicleHeading}
           routeCoordinates={currentRoute.pathCoordinates}

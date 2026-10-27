@@ -9,7 +9,7 @@ export default function MumbaiMap({
   signals = [],
   hospitalLocation,
   pickupLocation,
-  activeRouteName = 'Mumbai Corridor',
+  activeRouteName = 'Dadar ➔ KEM Hospital Corridor',
   preemptedSignalId = null,
   severity = 'CODE_RED',
   height = '100%',
@@ -24,7 +24,7 @@ export default function MumbaiMap({
   const hospitalMarkerRef = useRef(null);
   const pickupMarkerRef = useRef(null);
 
-  // Initialize Leaflet Map
+  // Initialize Leaflet Map with OpenStreetMap
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -39,15 +39,16 @@ export default function MumbaiMap({
         attributionControl: false,
       });
 
-      // CartoDB Voyager tiles (crisp, beautiful, modern transit look)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      // Standard OpenStreetMap Tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        subdomains: 'abcd',
+        subdomains: ['a', 'b', 'c'],
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
       // Attribution small bottom right
       L.control.attribution({ position: 'bottomright', prefix: false })
-        .addAttribution('&copy; <a href="https://openstreetmap.org">OSM</a>')
+        .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>')
         .addTo(map);
 
       if (interactive) {
@@ -61,14 +62,34 @@ export default function MumbaiMap({
       }
 
       mapInstanceRef.current = map;
+
+      // Invalidate size after layout settles
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
     }
 
     return () => {
-      // Keep map instance alive across rerenders unless component unmounts
+      // Map instance preserved
     };
   }, []);
 
-  // Update Route Polyline
+  // Window resize & layout observer to keep OpenStreetMap responsive
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    const timer = setTimeout(handleResize, 350);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // Update Route Polyline on OpenStreetMap
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !routeCoordinates || routeCoordinates.length === 0) return;
@@ -81,21 +102,20 @@ export default function MumbaiMap({
     const corridorGlow = L.polyline(routeCoordinates, {
       color: '#10b981',
       weight: 12,
-      opacity: 0.35,
+      opacity: 0.45,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(map);
 
     // Inner bright navigation polyline
     const navLine = L.polyline(routeCoordinates, {
-      color: '#059669',
+      color: '#047857',
       weight: 5,
       opacity: 0.95,
       dashArray: '8, 6',
       lineCap: 'round',
     }).addTo(map);
 
-    // Group them
     const group = L.featureGroup([corridorGlow, navLine]);
     polylineRef.current = group;
 
@@ -105,7 +125,7 @@ export default function MumbaiMap({
       const hospitalIcon = L.divIcon({
         className: 'custom-hospital-marker',
         html: `
-          <div style="background: #dc2626; color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 4px 12px rgba(220,38,38,0.5);">
+          <div style="background: #dc2626; color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 4px 12px rgba(220,38,38,0.6);">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -117,7 +137,7 @@ export default function MumbaiMap({
       });
       hospitalMarkerRef.current = L.marker(hospitalLocation, { icon: hospitalIcon })
         .addTo(map)
-        .bindPopup(`<b>KEM Trauma Center</b><br/>Emergency Gate Active`);
+        .bindPopup(`<b>KEM Hospital & Trauma Center</b><br/>Emergency Casualty Gate Active`);
     }
 
     // Pickup Marker
@@ -126,7 +146,7 @@ export default function MumbaiMap({
       const pickupIcon = L.divIcon({
         className: 'custom-pickup-marker',
         html: `
-          <div style="background: #2563eb; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 10px rgba(37,99,235,0.4);">
+          <div style="background: #2563eb; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 10px rgba(37,99,235,0.5);">
             <div style="width: 10px; height: 10px; background: white; border-radius: 50%;"></div>
           </div>
         `,
@@ -135,11 +155,11 @@ export default function MumbaiMap({
       });
       pickupMarkerRef.current = L.marker(pickupLocation, { icon: pickupIcon })
         .addTo(map)
-        .bindPopup(`<b>Emergency Pickup</b><br/>Dadar TT Junction`);
+        .bindPopup(`<b>Emergency Pickup</b><br/>Dadar TT Junction, Mumbai`);
     }
   }, [routeCoordinates, hospitalLocation, pickupLocation]);
 
-  // Update Signals on map
+  // Update Signals on OpenStreetMap
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -152,7 +172,7 @@ export default function MumbaiMap({
       const isPreempted = sig.id === preemptedSignalId || sig.preempted;
       const isGreen = isPreempted || sig.currentPhase === 'GREEN';
       const color = isGreen ? '#10b981' : '#ef4444';
-      const glow = isPreempted ? '0 0 16px #10b981, 0 0 32px #10b981' : '0 2px 6px rgba(0,0,0,0.3)';
+      const glow = isPreempted ? '0 0 16px #10b981, 0 0 30px #10b981' : '0 2px 8px rgba(0,0,0,0.4)';
 
       const signalIcon = L.divIcon({
         className: 'custom-signal-marker',
@@ -186,8 +206,7 @@ export default function MumbaiMap({
           <div style="font-family: sans-serif; font-size: 12px;">
             <b>${sig.name}</b><br/>
             <span>Road: ${sig.road}</span><br/>
-            <span>Status: <b>${isGreen ? 'GREEN CORRIDOR ACTIVE' : 'RED — Awaiting Preemption'}</b></span><br/>
-            <span>GPIO Green Pin: ${sig.gpioGreenPin}</span>
+            <span>Preemption: <b>${isGreen ? 'GREEN WAVE LOCKED' : 'Awaiting Approach'}</b></span>
           </div>
         `);
 
@@ -195,7 +214,7 @@ export default function MumbaiMap({
     });
   }, [signals, preemptedSignalId]);
 
-  // Update Ambulance / Vehicle Marker
+  // Update Moving Ambulance Marker on OpenStreetMap
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !vehicleLocation) return;
@@ -228,31 +247,31 @@ export default function MumbaiMap({
       vehicleMarkerRef.current.setLatLng(vehicleLocation);
     }
 
-    // Smoothly pan map to follow vehicle
+    // Pan map to follow vehicle smoothly
     map.panTo(vehicleLocation, { animate: true, duration: 0.8 });
   }, [vehicleLocation, vehicleHeading]);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl bg-slate-900 border border-slate-700/60 shadow-lg" style={{ height }}>
-      {/* Actual Leaflet Container */}
+    <div className="relative w-full h-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-700/60 shadow-lg" style={{ height }}>
+      {/* Leaflet OpenStreetMap Container */}
       <div ref={mapRef} className="w-full h-full z-0" />
 
-      {/* Corridor HUD Badge */}
-      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700 shadow-md">
+      {/* OpenStreetMap Brand Badge */}
+      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-700 shadow-md">
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Mumbai Corridor</div>
-          <div className="text-xs font-semibold text-white">{activeRouteName}</div>
+          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">OpenStreetMap • Mumbai</div>
+          <div className="text-xs font-bold text-white">{activeRouteName}</div>
         </div>
       </div>
 
       {/* Preemption Wave Indicator */}
       {preemptedSignalId && (
-        <div className="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 bg-emerald-600/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-emerald-400 text-white shadow-lg animate-pulse">
+        <div className="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 bg-emerald-600/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-emerald-400 text-white shadow-lg animate-pulse">
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14" />
           </svg>
-          <span className="text-[11px] font-bold tracking-wide">WAVE LOCK ACTIVE</span>
+          <span className="text-[10px] font-bold tracking-wide">WAVE LOCK ACTIVE</span>
         </div>
       )}
     </div>
