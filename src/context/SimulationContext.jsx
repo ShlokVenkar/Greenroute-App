@@ -401,7 +401,7 @@ export function SimProvider({ children }) {
           });
         }
       });
-    }, 2500);
+    }, 1200);
 
     return () => {
       if (navIntervalRef.current) clearInterval(navIntervalRef.current);

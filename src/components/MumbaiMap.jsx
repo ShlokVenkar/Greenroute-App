@@ -82,9 +82,18 @@ export default function MumbaiMap({
     const t1 = setTimeout(() => map.invalidateSize(), 100);
     const t2 = setTimeout(() => map.invalidateSize(), 400);
 
+    // ResizeObserver for automatic resize handling (e.g. mobile <-> expanded view toggle)
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapInstance.current) {
+        mapInstance.current.invalidateSize();
+      }
+    });
+    resizeObserver.observe(containerRef.current);
+
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      resizeObserver.disconnect();
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
