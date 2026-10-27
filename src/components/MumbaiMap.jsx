@@ -1,95 +1,96 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Locate, Navigation2, Compass, Layers } from 'lucide-react';
 
 export default function MumbaiMap({
-  vehicleLocation,
+  vehicleLocation = [19.0118, 72.8449],
   vehicleHeading = 180,
   routeCoordinates = [],
   signals = [],
   hospitalLocation,
   pickupLocation,
-  activeRouteName = 'Dadar ➔ KEM Hospital Corridor',
+  activeRouteName = 'Dadar ➔ KEM Hospital',
   preemptedSignalId = null,
   severity = 'CODE_RED',
   height = '100%',
   interactive = true,
-  onMapClick,
+  isLiveGps = false,
+  gpsAccuracy = 15,
+  onRecenter,
 }) {
-  const mapRef = useRef(null);
+  const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const vehicleMarkerRef = useRef(null);
+  const gpsAccuracyCircleRef = useRef(null);
   const polylineRef = useRef(null);
   const signalMarkersRef = useRef([]);
   const hospitalMarkerRef = useRef(null);
   const pickupMarkerRef = useRef(null);
 
-  // Initialize Leaflet Map with OpenStreetMap
+  // Initialize Map
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      const initialLat = vehicleLocation ? vehicleLocation[0] : 19.0118;
-      const initialLng = vehicleLocation ? vehicleLocation[1] : 72.8449;
+      const lat = vehicleLocation ? vehicleLocation[0] : 19.0118;
+      const lng = vehicleLocation ? vehicleLocation[1] : 72.8449;
 
-      const map = L.map(mapRef.current, {
-        center: [initialLat, initialLng],
+      const map = L.map(mapContainerRef.current, {
+        center: [lat, lng],
         zoom: 15,
         zoomControl: false,
         attributionControl: false,
+        fadeAnimation: true,
+        markerZoomAnimation: true,
       });
 
-      // Standard OpenStreetMap Tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        subdomains: ['a', 'b', 'c'],
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
+      // CartoDB OpenStreetMap Voyager layer — ultra-reliable, crisp, and no rate limits
+      const osmLayer = L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        {
+          maxZoom: 19,
+          subdomains: 'abcd',
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }
+      ).addTo(map);
 
-      // Attribution small bottom right
-      L.control.attribution({ position: 'bottomright', prefix: false })
-        .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>')
+      // Attribution control bottom-right
+      L.control
+        .attribution({ position: 'bottomright', prefix: false })
+        .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>')
         .addTo(map);
 
       if (interactive) {
         L.control.zoom({ position: 'bottomright' }).addTo(map);
       }
 
-      if (onMapClick) {
-        map.on('click', (e) => {
-          onMapClick([e.latlng.lat, e.latlng.lng]);
-        });
-      }
-
       mapInstanceRef.current = map;
 
-      // Invalidate size after layout settles
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 200);
-    }
+      // Force multiple size invalidations to ensure tiles render immediately
+      const timers = [
+        setTimeout(() => map.invalidateSize(), 50),
+        setTimeout(() => map.invalidateSize(), 200),
+        setTimeout(() => map.invalidateSize(), 600),
+      ];
 
-    return () => {
-      // Map instance preserved
-    };
-  }, []);
-
-  // Window resize & layout observer to keep OpenStreetMap responsive
-  useEffect(() => {
-    const handleResize = () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
+      // ResizeObserver to automatically resize when mobile frame or viewport changes
+      let resizeObserver = null;
+      if (window.ResizeObserver && mapContainerRef.current) {
+        resizeObserver = new ResizeObserver(() => {
+          map.invalidateSize();
+        });
+        resizeObserver.observe(mapContainerRef.current);
       }
-    };
-    window.addEventListener('resize', handleResize);
-    const timer = setTimeout(handleResize, 350);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timer);
-    };
+
+      return () => {
+        timers.forEach(clearTimeout);
+        if (resizeObserver) resizeObserver.disconnect();
+      };
+    }
   }, []);
 
-  // Update Route Polyline on OpenStreetMap
+  // Update Route Polyline
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !routeCoordinates || routeCoordinates.length === 0) return;
@@ -98,26 +99,25 @@ export default function MumbaiMap({
       polylineRef.current.remove();
     }
 
-    // Glowing corridor background line
+    // Glowing corridor background
     const corridorGlow = L.polyline(routeCoordinates, {
       color: '#10b981',
       weight: 12,
-      opacity: 0.45,
+      opacity: 0.4,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(map);
 
-    // Inner bright navigation polyline
+    // High-contrast primary transit line
     const navLine = L.polyline(routeCoordinates, {
-      color: '#047857',
+      color: '#059669',
       weight: 5,
       opacity: 0.95,
       dashArray: '8, 6',
       lineCap: 'round',
     }).addTo(map);
 
-    const group = L.featureGroup([corridorGlow, navLine]);
-    polylineRef.current = group;
+    polylineRef.current = L.featureGroup([corridorGlow, navLine]);
 
     // Hospital Marker
     if (hospitalLocation) {
@@ -137,7 +137,7 @@ export default function MumbaiMap({
       });
       hospitalMarkerRef.current = L.marker(hospitalLocation, { icon: hospitalIcon })
         .addTo(map)
-        .bindPopup(`<b>KEM Hospital & Trauma Center</b><br/>Emergency Casualty Gate Active`);
+        .bindPopup(`<b>Emergency Destination Hospital</b><br/>Casualty Gate Open`);
     }
 
     // Pickup Marker
@@ -155,7 +155,7 @@ export default function MumbaiMap({
       });
       pickupMarkerRef.current = L.marker(pickupLocation, { icon: pickupIcon })
         .addTo(map)
-        .bindPopup(`<b>Emergency Pickup</b><br/>Dadar TT Junction, Mumbai`);
+        .bindPopup(`<b>Pickup Location</b>`);
     }
   }, [routeCoordinates, hospitalLocation, pickupLocation]);
 
@@ -164,15 +164,16 @@ export default function MumbaiMap({
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Remove old signal markers
-    signalMarkersRef.current.forEach(m => m.remove());
+    signalMarkersRef.current.forEach((m) => m.remove());
     signalMarkersRef.current = [];
 
-    signals.forEach(sig => {
+    signals.forEach((sig) => {
       const isPreempted = sig.id === preemptedSignalId || sig.preempted;
       const isGreen = isPreempted || sig.currentPhase === 'GREEN';
       const color = isGreen ? '#10b981' : '#ef4444';
-      const glow = isPreempted ? '0 0 16px #10b981, 0 0 30px #10b981' : '0 2px 8px rgba(0,0,0,0.4)';
+      const glow = isPreempted
+        ? '0 0 16px #10b981, 0 0 32px #10b981'
+        : '0 2px 6px rgba(0,0,0,0.3)';
 
       const signalIcon = L.divIcon({
         className: 'custom-signal-marker',
@@ -206,7 +207,7 @@ export default function MumbaiMap({
           <div style="font-family: sans-serif; font-size: 12px;">
             <b>${sig.name}</b><br/>
             <span>Road: ${sig.road}</span><br/>
-            <span>Preemption: <b>${isGreen ? 'GREEN WAVE LOCKED' : 'Awaiting Approach'}</b></span>
+            <span>Status: <b>${isGreen ? 'GREEN WAVE ACTIVE 🟢' : 'RED — APPROACHING'}</b></span>
           </div>
         `);
 
@@ -214,10 +215,29 @@ export default function MumbaiMap({
     });
   }, [signals, preemptedSignalId]);
 
-  // Update Moving Ambulance Marker on OpenStreetMap
+  // Update Live Vehicle / Mobile GPS Marker
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !vehicleLocation) return;
+
+    // GPS Accuracy Circle if live GPS is enabled
+    if (isLiveGps) {
+      if (!gpsAccuracyCircleRef.current) {
+        gpsAccuracyCircleRef.current = L.circle(vehicleLocation, {
+          radius: gpsAccuracy || 20,
+          color: '#3b82f6',
+          fillColor: '#3b82f6',
+          fillOpacity: 0.15,
+          weight: 1,
+        }).addTo(map);
+      } else {
+        gpsAccuracyCircleRef.current.setLatLng(vehicleLocation);
+        gpsAccuracyCircleRef.current.setRadius(gpsAccuracy || 20);
+      }
+    } else if (gpsAccuracyCircleRef.current) {
+      gpsAccuracyCircleRef.current.remove();
+      gpsAccuracyCircleRef.current = null;
+    }
 
     if (!vehicleMarkerRef.current) {
       const vehicleIcon = L.divIcon({
@@ -234,7 +254,7 @@ export default function MumbaiMap({
               </svg>
             </div>
             <div style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 8px; font-weight: 800; border-radius: 6px; padding: 1px 4px; box-shadow: 0 0 6px #ef4444;">
-              SOS
+              ${isLiveGps ? 'GPS' : 'AMB'}
             </div>
           </div>
         `,
@@ -248,32 +268,63 @@ export default function MumbaiMap({
     }
 
     // Pan map to follow vehicle smoothly
-    map.panTo(vehicleLocation, { animate: true, duration: 0.8 });
-  }, [vehicleLocation, vehicleHeading]);
+    map.panTo(vehicleLocation, { animate: true, duration: 0.6 });
+  }, [vehicleLocation, vehicleHeading, isLiveGps, gpsAccuracy]);
+
+  // Recenter helper
+  const handleRecenter = () => {
+    if (mapInstanceRef.current && vehicleLocation) {
+      mapInstanceRef.current.setView(vehicleLocation, 16, { animate: true });
+      mapInstanceRef.current.invalidateSize();
+    }
+    onRecenter?.();
+  };
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-700/60 shadow-lg" style={{ height }}>
-      {/* Leaflet OpenStreetMap Container */}
-      <div ref={mapRef} className="w-full h-full z-0" />
+    <div
+      className="relative w-full h-full min-h-[260px] overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-xl"
+      style={{ height }}
+    >
+      {/* ─── Leaflet OpenStreetMap Container (Position Absolute Inset-0 to Guarantee Size) ─── */}
+      <div ref={mapContainerRef} className="absolute inset-0 w-full h-full z-0" />
 
-      {/* OpenStreetMap Brand Badge */}
-      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-700 shadow-md">
-        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      {/* ─── Top Brand HUD ─── */}
+      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700 shadow-md">
+        <span
+          className={`w-2.5 h-2.5 rounded-full ${
+            isLiveGps ? 'bg-blue-400 animate-ping' : 'bg-emerald-400 animate-pulse'
+          }`}
+        ></span>
         <div>
-          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">OpenStreetMap • Mumbai</div>
-          <div className="text-xs font-bold text-white">{activeRouteName}</div>
+          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1">
+            <span>OpenStreetMap</span>
+            <span>•</span>
+            <span className={isLiveGps ? 'text-blue-400 font-bold' : 'text-emerald-400'}>
+              {isLiveGps ? 'Live Mobile GPS Active' : 'Mumbai Simulation'}
+            </span>
+          </div>
+          <div className="text-xs font-bold text-white truncate max-w-[180px]">{activeRouteName}</div>
         </div>
       </div>
 
-      {/* Preemption Wave Indicator */}
+      {/* ─── Preemption Wave Active Badge ─── */}
       {preemptedSignalId && (
         <div className="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 bg-emerald-600/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-emerald-400 text-white shadow-lg animate-pulse">
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14" />
           </svg>
-          <span className="text-[10px] font-bold tracking-wide">WAVE LOCK ACTIVE</span>
+          <span className="text-[10px] font-black tracking-wide">WAVE LOCK ACTIVE</span>
         </div>
       )}
+
+      {/* ─── Recenter on My Location Button ─── */}
+      <button
+        onClick={handleRecenter}
+        className="absolute bottom-3 right-3 z-[1000] w-10 h-10 rounded-xl bg-slate-900/95 backdrop-blur-md border border-slate-700 hover:border-emerald-500 text-white flex items-center justify-center shadow-xl active:scale-95 transition-all"
+        title="Recenter on My GPS Location"
+      >
+        <Locate className={`w-5 h-5 ${isLiveGps ? 'text-blue-400' : 'text-emerald-400'}`} />
+      </button>
     </div>
   );
 }

@@ -34,6 +34,8 @@ const initialMumbaiState = {
   missionActive: true,
   sirenOn: true,
   severity: 'CODE_RED', // 'CODE_RED' | 'CODE_AMBER' | 'CODE_YELLOW'
+  medicalReason: 'Heart Attack / Cardiac Arrest',
+  selectedHospitalId: 'kem',
   currentRoute: DEFAULT_ROUTE,
   routeIndex: 0, // current index in pathCoordinates
   vehicleLocation: DEFAULT_ROUTE.pathCoordinates[0],
@@ -42,6 +44,7 @@ const initialMumbaiState = {
   distanceRemainingMeters: 2400,
   etaSeconds: 270, // 4.5 mins
   isUsingDeviceGps: false,
+  gpsAccuracy: 12,
 
   // Signals on current route
   signals: DEFAULT_ROUTE.signals,
@@ -146,6 +149,22 @@ function mumbaiReducer(state, action) {
 
     case 'SET_SEVERITY':
       return { ...state, severity: action.severity };
+
+    case 'SET_DESTINATION_HOSPITAL': {
+      const hosp = MUMBAI_HOSPITALS.find((h) => h.id === action.hospitalId) || MUMBAI_HOSPITALS[0];
+      return {
+        ...state,
+        selectedHospitalId: hosp.id,
+        etaSeconds: (hosp.etaDefaultMins || 5) * 60,
+      };
+    }
+
+    case 'SET_MEDICAL_EMERGENCY':
+      return {
+        ...state,
+        medicalReason: action.reason,
+        severity: action.severity,
+      };
 
     case 'TOGGLE_SIREN':
       return { ...state, sirenOn: !state.sirenOn };
@@ -383,10 +402,17 @@ export function SimProvider({ children }) {
     };
   }, [state.missionActive, state.isUsingDeviceGps, logEvent]);
 
-  // Physical Device GPS integration
+  // Physical Device Mobile GPS continuous integration
+  const gpsWatchIdRef = useRef(null);
+
   const toggleDeviceGps = useCallback(() => {
-    if (state.isUsingDeviceGps) {
+    if (stateRef.current.isUsingDeviceGps) {
+      if (gpsWatchIdRef.current !== null && 'geolocation' in navigator) {
+        navigator.geolocation.clearWatch(gpsWatchIdRef.current);
+        gpsWatchIdRef.current = null;
+      }
       dispatch({ type: 'SET_DEVICE_GPS', enabled: false });
+      logEvent('system', 'Switched back to Mumbai simulation route.');
     } else {
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -397,17 +423,33 @@ export function SimProvider({ children }) {
               location: [pos.coords.latitude, pos.coords.longitude],
               speedKmh: Math.round((pos.coords.speed || 0) * 3.6),
             });
-            logEvent('system', `Connected to device live GPS hardware: [${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}]`);
+            logEvent('system', `Connected to device live GPS: [${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}] (Accuracy: ±${Math.round(pos.coords.accuracy)}m)`);
           },
           (err) => {
-            alert('Could not access live device GPS: ' + err.message);
-          }
+            alert('Could not access mobile GPS: ' + err.message + '. Please allow location access in your browser/phone settings.');
+          },
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+
+        // Continuous mobile GPS updates
+        gpsWatchIdRef.current = navigator.geolocation.watchPosition(
+          (pos) => {
+            dispatch({
+              type: 'SET_VEHICLE_POSITION',
+              location: [pos.coords.latitude, pos.coords.longitude],
+              speedKmh: Math.round((pos.coords.speed || 0) * 3.6),
+            });
+          },
+          (err) => {
+            console.warn('GPS Watch Notice:', err);
+          },
+          { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
         );
       } else {
-        alert('Geolocation is not supported by your browser.');
+        alert('Geolocation is not supported by your mobile browser.');
       }
     }
-  }, [state.isUsingDeviceGps, logEvent]);
+  }, [logEvent]);
 
   const value = {
     state,
@@ -422,13 +464,21 @@ export function SimProvider({ children }) {
           ...userDetails,
         },
       }),
-      logout: () => dispatch({ type: 'LOGOUT' }),
+      logout: () => {
+        if (gpsWatchIdRef.current !== null && 'geolocation' in navigator) {
+          navigator.geolocation.clearWatch(gpsWatchIdRef.current);
+          gpsWatchIdRef.current = null;
+        }
+        dispatch({ type: 'LOGOUT' });
+      },
       confirmLanguage: (lang) => dispatch({ type: 'CONFIRM_LANGUAGE', lang }),
       setLanguage: (lang) => dispatch({ type: 'SET_LANGUAGE', lang }),
       toggleMobileFrame: () => dispatch({ type: 'TOGGLE_MOBILE_FRAME' }),
       setMobileFrame: (val) => dispatch({ type: 'SET_MOBILE_FRAME', value: val }),
       setActiveTab: (tab) => dispatch({ type: 'SET_ACTIVE_TAB', tab }),
       setSeverity: (severity) => dispatch({ type: 'SET_SEVERITY', severity }),
+      setDestinationHospital: (hospitalId) => dispatch({ type: 'SET_DESTINATION_HOSPITAL', hospitalId }),
+      setMedicalEmergency: (reason, severity) => dispatch({ type: 'SET_MEDICAL_EMERGENCY', reason, severity }),
       toggleSiren: () => dispatch({ type: 'TOGGLE_SIREN' }),
       completeMission: () => dispatch({ type: 'COMPLETE_MISSION' }),
       startNewMission: () => dispatch({ type: 'START_NEW_MISSION' }),
