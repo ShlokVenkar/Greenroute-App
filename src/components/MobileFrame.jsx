@@ -21,19 +21,33 @@ export default function MobileFrame({ children }) {
   let navItems = [];
   if (user?.role === 'driver') {
     navItems = [
-      { id: 'main', label: 'Driver Cockpit', icon: Navigation, activeColor: 'text-emerald-400' },
-      { id: 'hardware', label: 'Hardware IoT', icon: Cpu, activeColor: 'text-purple-400' },
+      { id: 'main', label: t('driverCockpitTab'), icon: Navigation, activeColor: 'text-emerald-400' },
+      { id: 'hardware', label: t('hardwareTab'), icon: Cpu, activeColor: 'text-purple-400' },
     ];
   } else if (user?.role === 'citizen') {
     navItems = [
-      { id: 'main', label: 'Citizen SOS', icon: ShieldAlert, activeColor: 'text-red-400' },
+      { id: 'main', label: t('navCitizen'), icon: ShieldAlert, activeColor: 'text-red-400' },
     ];
   } else if (user?.role === 'admin') {
     navItems = [
-      { id: 'main', label: 'Traffic Control', icon: Activity, activeColor: 'text-blue-400' },
-      { id: 'hardware', label: 'Hardware IoT', icon: Cpu, activeColor: 'text-purple-400' },
+      { id: 'main', label: t('navAdmin'), icon: Activity, activeColor: 'text-blue-400' },
+      { id: 'hardware', label: t('hardwareTab'), icon: Cpu, activeColor: 'text-purple-400' },
     ];
   }
+
+  const getLocalizedUserName = () => {
+    if (!user) return '';
+    if (state.language === 'hi') {
+      if (user.role === 'driver') return 'रमेश शिंदे (चालक)';
+      if (user.role === 'citizen') return 'आरव मेहता (नागरिक)';
+      if (user.role === 'admin') return 'इंस्पेक्टर संजय देशमुख';
+    } else if (state.language === 'mr') {
+      if (user.role === 'driver') return 'रमेश शिंदे (चालक)';
+      if (user.role === 'citizen') return 'आरव मेहता (नागरिक)';
+      if (user.role === 'admin') return 'पोलीस निरीक्षक संजय देशमुख';
+    }
+    return user.name;
+  };
 
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center p-0 md:p-4 select-none">
@@ -140,7 +154,7 @@ export default function MobileFrame({ children }) {
                 {user.role === 'driver' ? '🚑' : user.role === 'citizen' ? '🆘' : '👮'}
               </div>
               <div className="truncate">
-                <div className="text-xs font-bold text-white truncate">{user.name}</div>
+                <div className="text-xs font-bold text-white truncate">{getLocalizedUserName()}</div>
                 <div className="text-[9px] text-slate-400 uppercase font-mono">{user.badge}</div>
               </div>
             </div>
@@ -151,7 +165,7 @@ export default function MobileFrame({ children }) {
               title="Logout and switch persona"
             >
               <LogOut className="w-3 h-3" />
-              <span>Switch Role</span>
+              <span>{t('switchRoleBtn')}</span>
             </button>
           </div>
         )}
@@ -199,7 +213,7 @@ export default function MobileFrame({ children }) {
               className="flex flex-col items-center justify-center py-1 px-4 rounded-xl text-slate-400 hover:text-red-400 transition-colors"
             >
               <LogOut className="w-5 h-5" />
-              <span className="text-[10px] mt-1 tracking-tight font-medium">Logout</span>
+              <span className="text-[10px] mt-1 tracking-tight font-medium">{t('logoutBtn')}</span>
             </button>
           </div>
         )}

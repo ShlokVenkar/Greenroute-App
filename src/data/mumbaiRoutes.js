@@ -1,13 +1,20 @@
 // Mumbai Emergency Routes, Hospitals, Landmarks, and Signal Junctions
 // Centered around Vidyalankar Polytechnic, Wadala (East) & Apex Mumbai Hospitals
 // NOTE: All coordinates follow real paved street driving paths (OSRM / OpenStreetMap road network)
+// Full multilingual support (English, Hindi, Marathi)
 
 export const MUMBAI_HOSPITALS = [
   {
     id: 'sion',
     name: 'Lokmanya Tilak Municipal General Hospital (Sion)',
+    nameHi: 'लोकमान्य तिलक म्युनिसिपल जनरल अस्पताल (सायन)',
+    nameMr: 'लोकमान्य टिळक म्युनिसिपल सर्वसाधारण रुग्णालय (सायन)',
     shortName: 'Sion Hospital Apex Trauma',
+    shortNameHi: 'सायन अस्पताल ट्रॉमा सेंटर',
+    shortNameMr: 'सायन रुग्णालय ट्रॉमा सेंटर',
     area: 'Sion West, Mumbai (Nearest to Vidyalankar)',
+    areaHi: 'सायन पश्चिम, मुंबई (विद्यालंकार के निकट)',
+    areaMr: 'सायन पश्चिम, मुंबई (विद्यालंकारजवळ)',
     type: 'Major Municipal Level-1 Apex Trauma Center',
     lat: 19.0392,
     lng: 72.8617,
@@ -18,8 +25,14 @@ export const MUMBAI_HOSPITALS = [
   {
     id: 'somaiya',
     name: 'K. J. Somaiya Hospital & Research Centre',
+    nameHi: 'के. जे. सोमैया अस्पताल एवं अनुसंधान केंद्र',
+    nameMr: 'के. जे. सोमय्या रुग्णालय व संशोधन केंद्र',
     shortName: 'Somaiya Hospital, Sion',
+    shortNameHi: 'सोमैया अस्पताल, सायन',
+    shortNameMr: 'सोमय्या रुग्णालय, सायन',
     area: 'Somaiya Ayurvihar Complex, Sion (East), Mumbai',
+    areaHi: 'सोमैया आयुर्विहार, सायन (पूर्व), मुंबई',
+    areaMr: 'सोमय्या आयुर्विहार, सायन (पूर्व), मुंबई',
     type: 'Multi-Speciality Tertiary Hospital',
     lat: 19.0490,
     lng: 72.8720,
@@ -30,8 +43,14 @@ export const MUMBAI_HOSPITALS = [
   {
     id: 'kem',
     name: 'KEM Hospital & Seth GS Medical College',
+    nameHi: 'केईएम अस्पताल एवं सेठ जीएस मेडिकल कॉलेज',
+    nameMr: 'केईएम रुग्णालय व सेठ जीएस वैद्यकीय महाविद्यालय',
     shortName: 'KEM Hospital, Parel',
+    shortNameHi: 'केईएम अस्पताल, परेल',
+    shortNameMr: 'केईएम रुग्णालय, परळ',
     area: 'Acharya Donde Marg, Parel, Mumbai',
+    areaHi: 'आचार्य दोंदे मार्ग, परेल, मुंबई',
+    areaMr: 'आचार्य दोंदे मार्ग, परळ, मुंबई',
     type: 'Government Apex Trauma Center (Level-1)',
     lat: 19.0028,
     lng: 72.8423,
@@ -42,8 +61,14 @@ export const MUMBAI_HOSPITALS = [
   {
     id: 'tata',
     name: 'Tata Memorial Hospital',
+    nameHi: 'टाटा मेमोरियल अस्पताल',
+    nameMr: 'टाटा मेमोरियल रुग्णालय',
     shortName: 'Tata Memorial, Parel',
+    shortNameHi: 'टाटा मेमोरियल, परेल',
+    shortNameMr: 'टाटा मेमोरियल, परळ',
     area: 'Dr. E Borges Road, Parel, Mumbai',
+    areaHi: 'डॉ. ई बोर्जेस रोड, परेल, मुंबई',
+    areaMr: 'डॉ. ई बोर्जेस रोड, परळ, मुंबई',
     type: 'Specialized Critical Care & Oncology',
     lat: 19.0048,
     lng: 72.8429,
@@ -54,8 +79,14 @@ export const MUMBAI_HOSPITALS = [
   {
     id: 'lilavati',
     name: 'Lilavati Hospital & Research Centre',
+    nameHi: 'लीलावती अस्पताल एवं अनुसंधान केंद्र',
+    nameMr: 'लीलावती रुग्णालय व संशोधन केंद्र',
     shortName: 'Lilavati Hospital, Bandra',
+    shortNameHi: 'लीलावती अस्पताल, बांद्रा',
+    shortNameMr: 'लीलावती रुग्णालय, वांद्रे',
     area: 'A-791, Bandra Reclamation, Bandra West',
+    areaHi: 'बांद्रा रिक्लेमेशन, बांद्रा पश्चिम',
+    areaMr: 'वांद्रे रिक्लेमेशन, वांद्रे पश्चिम',
     type: 'Multi-Speciality Emergency & Trauma Care',
     lat: 19.0514,
     lng: 72.8285,
@@ -66,8 +97,14 @@ export const MUMBAI_HOSPITALS = [
   {
     id: 'hinduja',
     name: 'P. D. Hinduja National Hospital',
+    nameHi: 'पी. डी. हिंदुजा नेशनल अस्पताल',
+    nameMr: 'पी. डी. हिंदुजा राष्ट्रीय रुग्णालय',
     shortName: 'Hinduja Hospital, Mahim',
+    shortNameHi: 'हिंदुजा अस्पताल, माहिम',
+    shortNameMr: 'हिंदुजा रुग्णालय, माहीम',
     area: 'Veer Savarkar Marg, Mahim West',
+    areaHi: 'वीर सावरकर मार्ग, माहिम पश्चिम',
+    areaMr: 'वीर सावरकर मार्ग, माहीम पश्चिम',
     type: 'Tertiary Emergency Care',
     lat: 19.0330,
     lng: 72.8395,
@@ -78,8 +115,14 @@ export const MUMBAI_HOSPITALS = [
   {
     id: 'breach_candy',
     name: 'Breach Candy Hospital Trust',
+    nameHi: 'ब्रीच कैंडी अस्पताल ट्रस्ट',
+    nameMr: 'ब्रीच कँडी रुग्णालय ट्रस्ट',
     shortName: 'Breach Candy Hospital',
+    shortNameHi: 'ब्रीच कैंडी अस्पताल',
+    shortNameMr: 'ब्रीच कँडी रुग्णालय',
     area: '60 A, Bhulabhai Desai Marg, Mahalakshmi',
+    areaHi: 'भूलाभाई देसाई मार्ग, महालक्ष्मी',
+    areaMr: 'भूलाभाई देसाई मार्ग, महालक्ष्मी',
     type: 'Super Speciality Emergency Wing',
     lat: 18.9715,
     lng: 72.8066,
@@ -111,6 +154,8 @@ export const MUMBAI_ROUTES = [
   {
     id: 'route_vidyalankar_to_sion',
     name: 'Vidyalankar Polytechnic ➔ Sion Hospital (Trauma Center)',
+    nameHi: 'विद्यालंकार पॉलिटेक्निक ➔ सायन अस्पताल (ट्रॉमा सेंटर)',
+    nameMr: 'विद्यालंकार पॉलिटेक्निक ➔ सायन रुग्णालय (ट्रॉमा सेंटर)',
     pickupId: 'vidyalankar_polytechnic',
     hospitalId: 'sion',
     totalDistanceKm: 3.7,
@@ -698,6 +743,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_VP01',
         name: 'Vidyalankar Campus Junction',
+        nameHi: 'विद्यालंकार कॉलेज जंक्शन',
+        nameMr: 'विद्यालंकार कॉलेज जंक्शन',
         lat: 19.024229,
         lng: 72.866110,
         road: 'Vidyalankar College Rd & Antop Hill Link',
@@ -712,6 +759,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_VP02',
         name: 'Antop Hill Church Junction',
+        nameHi: 'अंटॉप हिल चर्च जंक्शन',
+        nameMr: 'अँटॉप हिल चर्च जंक्शन',
         lat: 19.027182,
         lng: 72.866522,
         road: 'Barkat Ali Dargah Marg',
@@ -726,6 +775,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_VP03',
         name: 'GTB Nagar Crossing',
+        nameHi: 'जीटीबी नगर क्रॉसिंग',
+        nameMr: 'जीटीबी नगर क्रॉसिंग',
         lat: 19.034517,
         lng: 72.866901,
         road: 'Korba Mithagar & Sion Koliwada Rd',
@@ -740,6 +791,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_VP04',
         name: 'Sion Circle Junction',
+        nameHi: 'सायन सर्कल जंक्शन',
+        nameMr: 'सायन सर्कल जंक्शन',
         lat: 19.042185,
         lng: 72.864138,
         road: 'Dr. Babasaheb Ambedkar Rd & Sion Flyover',
@@ -753,12 +806,54 @@ export const MUMBAI_ROUTES = [
       },
     ],
     maneuvers: [
-      { step: 1, text: 'Depart Vidyalankar Polytechnic Campus heading North on Vidyalankar College Road', distanceM: 300, turn: 'straight' },
-      { step: 2, text: 'Turn right at Antop Hill Church Junction onto M Ambedkar Marg — Green Wave Active', distanceM: 520, turn: 'right' },
-      { step: 3, text: 'Proceed along Korba Mithagar Road towards GTB Nagar', distanceM: 800, turn: 'straight' },
-      { step: 4, text: 'Follow Road No 29 in Sion East straight towards Sion Circle', distanceM: 750, turn: 'straight' },
-      { step: 5, text: 'At Sion Circle rotary, exit onto Laxmibai Kelkar Marg to Sion Hospital', distanceM: 350, turn: 'right' },
-      { step: 6, text: 'Arrive at Lokmanya Tilak Sion Hospital Emergency Trauma Casualty Gate', distanceM: 80, turn: 'arrive' },
+      {
+        step: 1,
+        text: 'Depart Vidyalankar Polytechnic Campus heading North on Vidyalankar College Road',
+        textHi: 'विद्यालंकार पॉलिटेक्निक परिसर से उत्तर दिशा में विद्यालंकार कॉलेज रोड पर आगे बढ़ें',
+        textMr: 'विद्यालंकार पॉलिटेक्निक कॅम्पसमधून उत्तर दिशेने विद्यालंकार कॉलेज रोडवर पुढे जा',
+        distanceM: 300,
+        turn: 'straight'
+      },
+      {
+        step: 2,
+        text: 'Turn right at Antop Hill Church Junction onto M Ambedkar Marg — Green Wave Active',
+        textHi: 'अंटॉप हिल चर्च जंक्शन पर एम. आंबेडकर मार्ग की ओर दाएं मुड़ें — ग्रीन वेव सक्रिय',
+        textMr: 'अँटॉप हिल चर्च जंक्शन येथे एम. आंबेडकर मार्गाकडे उजवीकडे वळा — ग्रीन वेव्ह सक्रिय',
+        distanceM: 520,
+        turn: 'right'
+      },
+      {
+        step: 3,
+        text: 'Proceed along Korba Mithagar Road towards GTB Nagar',
+        textHi: 'कोरबा मीठागर रोड से जीटीबी नगर की ओर आगे बढ़ें',
+        textMr: 'कोरबा मिठागर रोडने जीटीबी नगरच्या दिशेने पुढे जा',
+        distanceM: 800,
+        turn: 'straight'
+      },
+      {
+        step: 4,
+        text: 'Follow Road No 29 in Sion East straight towards Sion Circle',
+        textHi: 'सायन पूर्व में रोड नं. 29 से सीधे सायन सर्कल की ओर बढ़ें',
+        textMr: 'सायन पूर्वेतील रोड नं. 29 वरून सरळ सायन सर्कलकडे जा',
+        distanceM: 750,
+        turn: 'straight'
+      },
+      {
+        step: 5,
+        text: 'At Sion Circle rotary, exit onto Laxmibai Kelkar Marg to Sion Hospital',
+        textHi: 'सायन सर्कल रोटरी से लक्ष्मीबाई केलकर मार्ग (सायन अस्पताल) की ओर निकलें',
+        textMr: 'सायन सर्कल रोटरीवरून लक्ष्मीबाई केळकर मार्ग (सायन रुग्णालय) कडे बाहेर पडा',
+        distanceM: 350,
+        turn: 'right'
+      },
+      {
+        step: 6,
+        text: 'Arrive at Lokmanya Tilak Sion Hospital Emergency Trauma Casualty Gate',
+        textHi: 'लोकमान्य तिलक सायन अस्पताल आपातकालीन ट्रॉमा कैजुअल्टी गेट पर पहुंचें',
+        textMr: 'लोकमान्य टिळक सायन रुग्णालय आपत्कालीन ट्रॉमा कॅज्युअल्टी गेटवर पोहोचा',
+        distanceM: 80,
+        turn: 'arrive'
+      },
     ],
   },
 
@@ -766,6 +861,8 @@ export const MUMBAI_ROUTES = [
   {
     id: 'route_vidyalankar_to_somaiya',
     name: 'Vidyalankar Polytechnic ➔ Somaiya Hospital (Sion East)',
+    nameHi: 'विद्यालंकार पॉलिटेक्निक ➔ सोमैया अस्पताल (सायन पूर्व)',
+    nameMr: 'विद्यालंकार पॉलिटेक्निक ➔ सोमय्या रुग्णालय (सायन पूर्व)',
     pickupId: 'vidyalankar_polytechnic',
     hospitalId: 'somaiya',
     totalDistanceKm: 5.4,
@@ -1485,6 +1582,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_VP01',
         name: 'Vidyalankar Campus Junction',
+        nameHi: 'विद्यालंकार कॉलेज जंक्शन',
+        nameMr: 'विद्यालंकार कॉलेज जंक्शन',
         lat: 19.024229,
         lng: 72.866110,
         road: 'Vidyalankar College Rd & Antop Hill Link',
@@ -1499,6 +1598,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_SOM01',
         name: 'Eastern Express Highway Junction',
+        nameHi: 'ईस्टर्न एक्सप्रेस हाईवे जंक्शन',
+        nameMr: 'ईस्टर्न एक्सप्रेस हायवे जंक्शन',
         lat: 19.036775,
         lng: 72.873992,
         road: 'Eastern Express Highway',
@@ -1513,6 +1614,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_SOM02',
         name: 'Somaiya Ayurvihar Gate Crossing',
+        nameHi: 'सोमैया आयुर्विहार गेट क्रॉसिंग',
+        nameMr: 'सोमय्या आयुर्विहार गेट क्रॉसिंग',
         lat: 19.049570,
         lng: 72.877314,
         road: 'Ayurvihar Complex Marg',
@@ -1526,11 +1629,46 @@ export const MUMBAI_ROUTES = [
       },
     ],
     maneuvers: [
-      { step: 1, text: 'Depart Vidyalankar Polytechnic onto Vidyalankar College Road', distanceM: 300, turn: 'straight' },
-      { step: 2, text: 'Head North towards Eastern Express Highway connector', distanceM: 1500, turn: 'straight' },
-      { step: 3, text: 'Merge onto Eastern Express Highway corridor — Green Wave Active', distanceM: 2000, turn: 'right' },
-      { step: 4, text: 'Turn left into Somaiya Ayurvihar Complex Gate towards Hospital Casualty', distanceM: 400, turn: 'left' },
-      { step: 5, text: 'Arrive at K. J. Somaiya Hospital & Research Centre Emergency Wing', distanceM: 100, turn: 'arrive' },
+      {
+        step: 1,
+        text: 'Depart Vidyalankar Polytechnic onto Vidyalankar College Road',
+        textHi: 'विद्यालंकार कॉलेज रोड पर आगे बढ़ें',
+        textMr: 'विद्यालंकार कॉलेज रोडवर पुढे जा',
+        distanceM: 300,
+        turn: 'straight'
+      },
+      {
+        step: 2,
+        text: 'Head North towards Eastern Express Highway connector',
+        textHi: 'ईस्टर्न एक्सप्रेस हाईवे कनेक्टर की ओर बढ़ें',
+        textMr: 'ईस्टर्न एक्सप्रेस हायवे कनेक्टरकडे पुढे जा',
+        distanceM: 1500,
+        turn: 'straight'
+      },
+      {
+        step: 3,
+        text: 'Merge onto Eastern Express Highway corridor — Green Wave Active',
+        textHi: 'ईस्टर्न एक्सप्रेस हाईवे पर आगे बढ़ें — ग्रीन वेव सक्रिय',
+        textMr: 'ईस्टर्न एक्सप्रेस हायवे कॉरिडोअरमध्ये सामील व्हा — ग्रीन वेव्ह सक्रिय',
+        distanceM: 2000,
+        turn: 'right'
+      },
+      {
+        step: 4,
+        text: 'Turn left into Somaiya Ayurvihar Complex Gate towards Hospital Casualty',
+        textHi: 'सोमैया आयुर्विहार गेट में बाएं मुड़ें',
+        textMr: 'सोमय्या आयुर्विहार गेटमध्ये डावीकडे वळा',
+        distanceM: 400,
+        turn: 'left'
+      },
+      {
+        step: 5,
+        text: 'Arrive at K. J. Somaiya Hospital & Research Centre Emergency Wing',
+        textHi: 'के. जे. सोमैया अस्पताल आपातकालीन विंग पर पहुंचें',
+        textMr: 'के. जे. सोमय्या रुग्णालय आपत्कालीन विभागाकडे पोहोचा',
+        distanceM: 100,
+        turn: 'arrive'
+      },
     ],
   },
 
@@ -1538,6 +1676,8 @@ export const MUMBAI_ROUTES = [
   {
     id: 'route_vidyalankar_to_kem',
     name: 'Vidyalankar Polytechnic ➔ KEM Hospital (Parel)',
+    nameHi: 'विद्यालंकार पॉलिटेक्निक ➔ केईएम अस्पताल (परेल)',
+    nameMr: 'विद्यालंकार पॉलिटेक्निक ➔ केईएम रुग्णालय (परळ)',
     pickupId: 'vidyalankar_polytechnic',
     hospitalId: 'kem',
     totalDistanceKm: 4.5,
@@ -2133,6 +2273,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_VK01',
         name: 'Wadala Bridge Junction',
+        nameHi: 'वडाला ब्रिज जंक्शन',
+        nameMr: 'वडाळा ब्रिज जंक्शन',
         lat: 19.018548,
         lng: 72.862652,
         road: 'Wadala Flyover & Rafi Ahmed Kidwai Marg',
@@ -2147,6 +2289,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_101',
         name: 'Dadar TT Junction',
+        nameHi: 'दादर टीटी जंक्शन',
+        nameMr: 'दादर टीटी जंक्शन',
         lat: 19.017416,
         lng: 72.854342,
         road: 'Dr. Babasaheb Ambedkar Rd',
@@ -2161,6 +2305,8 @@ export const MUMBAI_ROUTES = [
       {
         id: 'SIG_104',
         name: 'Parel TT / KEM Gate',
+        nameHi: 'परेल टीटी / केईएम गेट',
+        nameMr: 'परळ टीटी / केईएम गेट',
         lat: 19.005551,
         lng: 72.845214,
         road: 'Acharya Donde Marg',
@@ -2174,20 +2320,125 @@ export const MUMBAI_ROUTES = [
       },
     ],
     maneuvers: [
-      { step: 1, text: 'Depart Vidyalankar Polytechnic heading South towards Wadala Station', distanceM: 750, turn: 'straight' },
-      { step: 2, text: 'Cross Wadala Railway Overbridge onto Dadar Road', distanceM: 1150, turn: 'right' },
-      { step: 3, text: 'Merge South onto Dr. Babasaheb Ambedkar Road past Hindmata', distanceM: 1400, turn: 'straight' },
-      { step: 4, text: 'Turn right onto Acharya Donde Marg to KEM Trauma Casualty', distanceM: 800, turn: 'right' },
-      { step: 5, text: 'Arrive at KEM Hospital & Seth GS Medical College Trauma Center', distanceM: 100, turn: 'arrive' },
+      {
+        step: 1,
+        text: 'Depart Vidyalankar Polytechnic heading South towards Wadala Station',
+        textHi: 'वडाला स्टेशन की ओर दक्षिण दिशा में बढ़ें',
+        textMr: 'वडाळा स्टेशनच्या दिशेने दक्षिणेकडे जा',
+        distanceM: 750,
+        turn: 'straight'
+      },
+      {
+        step: 2,
+        text: 'Cross Wadala Railway Overbridge onto Dadar Road',
+        textHi: 'वडाला रेलवे ओवरब्रिज पार कर दादर रोड पर जाएं',
+        textMr: 'वडाळा रेल्वे ओव्हरब्रिज ओलांडून दादर रोडवर जा',
+        distanceM: 1150,
+        turn: 'right'
+      },
+      {
+        step: 3,
+        text: 'Merge South onto Dr. Babasaheb Ambedkar Road past Hindmata',
+        textHi: 'हिंदमाता के आगे डॉ. बाबासाहेब आंबेडकर मार्ग पर आगे बढ़ें',
+        textMr: 'हिंदमाता पुढे डॉ. बाबासाहेब आंबेडकर रोडवर पुढे जा',
+        distanceM: 1400,
+        turn: 'straight'
+      },
+      {
+        step: 4,
+        text: 'Turn right onto Acharya Donde Marg to KEM Trauma Casualty',
+        textHi: 'केईएम कैजुअल्टी हेतु आचार्य दोंदे मार्ग पर दाएं मुड़ें',
+        textMr: 'केईएम कॅज्युअल्टीसाठी आचार्य दोंदे मार्गावर उजवीकडे वळा',
+        distanceM: 800,
+        turn: 'right'
+      },
+      {
+        step: 5,
+        text: 'Arrive at KEM Hospital & Seth GS Medical College Trauma Center',
+        textHi: 'केईएम अस्पताल एवं सेठ जीएस मेडिकल कॉलेज ट्रॉमा सेंटर पर पहुंचें',
+        textMr: 'केईएम रुग्णालय व सेठ जीएस वैद्यकीय महाविद्यालय ट्रॉमा सेंटर येथे पोहोचा',
+        distanceM: 100,
+        turn: 'arrive'
+      },
     ],
   },
 ];
+
+export const CLINICAL_CONDITIONS = [
+  {
+    severity: 'CODE_RED',
+    levelTitle: 'HIGH SEVERITY — Critical Emergency',
+    levelTitleHi: 'उच्च गंभीरता — अति आपातकाल',
+    levelTitleMr: 'उच्च तीव्रता — अति गंभीर आपत्काल',
+    levelDesc: '500m Advance Signal Clearing • All Cross-Traffic Red • Emergency Siren',
+    levelDescHi: '500 मी. अग्रिम सिग्नल क्लिअरेंस • सभी क्रॉस-ट्रैफिक रेड • आपातकालीन सायरन',
+    levelDescMr: '500 मी. अगोदर सिग्नल क्लिअरन्स • सर्व क्रॉस-ट्रॅफिक लाल • आपत्कालीन सायरेन',
+    badgeClass: 'bg-red-500/20 text-red-400 border-red-500/50',
+    conditions: [
+      { name: 'Heart Attack (Cardiac Arrest)', nameHi: 'दिल का दौरा (कार्डियक अरेस्ट)', nameMr: 'हृदयविकाराचा झटका (कार्डियाक अरेस्ट)', icon: '❤️' },
+      { name: 'Severe Seizures (Status Epilepticus)', nameHi: 'गंभीर दौरे (एपिलेप्टिकस)', nameMr: 'तीव्र झटके (मिरगी/फिट्स)', icon: '⚡' },
+      { name: 'Major Trauma / Heavy Hemorrhage', nameHi: 'गंभीर चोट / भारी रक्तस्राव', nameMr: 'भीषण अपघात / प्रचंड रक्तस्त्राव', icon: '🩸' },
+      { name: 'Brain Stroke / Unconscious Patient', nameHi: 'ब्रेन स्ट्रोक / अचेत मरीज', nameMr: 'ब्रेन स्ट्रोक / बेशुद्ध रुग्ण', icon: '🧠' },
+    ],
+  },
+  {
+    severity: 'CODE_AMBER',
+    levelTitle: 'MEDIUM SEVERITY — Urgent Care',
+    levelTitleHi: 'मध्यम गंभीरता — त्वरित देखभाल',
+    levelTitleMr: 'मध्यम तीव्रता — तातडीची वैद्यकीय मदत',
+    levelDesc: '300m Advance Signal Clearing • Dynamic Green Extension',
+    levelDescHi: '300 मी. अग्रिम सिग्नल क्लिअरेंस • गतिशील ग्रीन विस्तार',
+    levelDescMr: '300 मी. अगोदर सिग्नल क्लिअरन्स • डायनॅमिक ग्रीन विस्तार',
+    badgeClass: 'bg-amber-500/20 text-amber-400 border-amber-500/50',
+    conditions: [
+      { name: 'Severe Asthma / Acute Breathing Distress', nameHi: 'गंभीर अस्थमा / सांस संकट', nameMr: 'तीव्र दमा / श्वास घेण्यास त्रास', icon: '🫁' },
+      { name: 'Compound Bone Fracture', nameHi: 'गंभीर फ्रैक्चर (हड्डी टूटना)', nameMr: 'गंभीर हाड मोडणे (फ्रॅक्चर)', icon: '🦴' },
+      { name: 'Second/Third Degree Burns', nameHi: 'गंभीर जलन (बर्न्स)', nameMr: 'गंभीर भाजणे (बर्न्स)', icon: '🔥' },
+      { name: 'Active Labor / Complicated Pregnancy', nameHi: 'प्रसव पीड़ा / जटिल गर्भावस्था', nameMr: 'प्रसूती कळा / गुंतागुंतीची गर्भधारणा', icon: '👶' },
+    ],
+  },
+  {
+    severity: 'CODE_YELLOW',
+    levelTitle: 'LOW SEVERITY — Non-Emergency / Transport',
+    levelTitleHi: 'सामान्य गंभीरता — गैर-आपातकालीन / परिवहन',
+    levelTitleMr: 'कमी तीव्रता — बिगर-आपत्कालीन / रुग्ण वाहतूक',
+    levelDesc: '180m Coordinated Green Phase • Zero Traffic Gridlock',
+    levelDescHi: '180 मी. समन्वित ग्रीन फेज • शून्य ट्रैफिक जाम',
+    levelDescMr: '180 मी. समन्वित ग्रीन फेज • शून्य ट्रॅफिक कोंडी',
+    badgeClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50',
+    conditions: [
+      { name: 'General Patient Transport for Check-up', nameHi: 'जांच हेतु सामान्य मरीज परिवहन', nameMr: 'तपासणीसाठी सर्वसाधारण रुग्ण वाहतूक', icon: '🩺' },
+      { name: 'Routine Dialysis Transfer', nameHi: 'नियमित डायलिसिस स्थानांतरण', nameMr: 'नियमित डायलिसिस स्थलांतर', icon: '🏥' },
+      { name: 'Stable Inter-Hospital Transfer', nameHi: 'स्थिर मरीज अस्पताल स्थानांतरण', nameMr: 'स्थिर रुग्ण आंतर-रुग्णालय स्थलांतर', icon: '📋' },
+      { name: 'Non-Emergency OPD Visit', nameHi: 'गैर-आपातकालीन ओपीडी यात्रा', nameMr: 'बिगर आपत्कालीन ओपीडी भेट', icon: '🚶' },
+    ],
+  },
+];
+
+export function getConditionDisplayName(conditionName, lang) {
+  if (!conditionName) return '';
+  for (const group of CLINICAL_CONDITIONS) {
+    for (const c of group.conditions) {
+      if (
+        c.name.toLowerCase() === conditionName.toLowerCase() ||
+        conditionName.toLowerCase().includes(c.name.split(' ')[0].toLowerCase())
+      ) {
+        if (lang === 'hi' && c.nameHi) return c.nameHi;
+        if (lang === 'mr' && c.nameMr) return c.nameMr;
+        return c.name;
+      }
+    }
+  }
+  return conditionName;
+}
 
 export const SEVERITY_CONFIG = {
   CODE_RED: {
     code: 'CODE_RED',
     name: 'High Severity — Critical Emergency',
     shortLabel: 'High (Critical)',
+    shortLabelHi: 'उच्च (गंभीर)',
+    shortLabelMr: 'उच्च (गंभीर)',
     priorityRank: 1,
     preemptionRadiusMeters: 500,
     greenDurationSeconds: 45,
@@ -2206,6 +2457,8 @@ export const SEVERITY_CONFIG = {
     code: 'CODE_AMBER',
     name: 'Medium Severity — Urgent Care',
     shortLabel: 'Medium (Urgent)',
+    shortLabelHi: 'मध्यम (त्वरित)',
+    shortLabelMr: 'मध्यम (तातडीचे)',
     priorityRank: 2,
     preemptionRadiusMeters: 300,
     greenDurationSeconds: 30,
@@ -2224,6 +2477,8 @@ export const SEVERITY_CONFIG = {
     code: 'CODE_YELLOW',
     name: 'Low Severity — Non-Emergency / Transport',
     shortLabel: 'Low (General)',
+    shortLabelHi: 'सामान्य (परिवहन)',
+    shortLabelMr: 'कमी (सामान्य)',
     priorityRank: 3,
     preemptionRadiusMeters: 180,
     greenDurationSeconds: 20,
