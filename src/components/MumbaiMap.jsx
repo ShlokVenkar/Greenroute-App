@@ -18,6 +18,8 @@ export default function MumbaiMap({
   isLiveGps = false,
   gpsAccuracy = 15,
   onRecenter,
+  showTopHud = true,
+  showWaveBadge = true,
 }) {
   const containerRef = useRef(null);
   const mapInstance = useRef(null);
@@ -70,7 +72,7 @@ export default function MumbaiMap({
       .addTo(map);
 
     if (interactive) {
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
+      L.control.zoom({ position: 'topright' }).addTo(map);
     }
 
     mapInstance.current = map;
@@ -293,28 +295,30 @@ export default function MumbaiMap({
         className="w-full h-full z-0"
       />
 
-      {/* ─── Top Brand HUD ─── */}
-      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700 shadow-md">
-        <span
-          className={`w-2.5 h-2.5 rounded-full ${
-            isLiveGps ? 'bg-blue-400 animate-ping' : 'bg-emerald-400 animate-pulse'
-          }`}
-        ></span>
-        <div>
-          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1">
-            <span>OpenStreetMap</span>
-            <span>•</span>
-            <span className={isLiveGps ? 'text-blue-400 font-bold' : 'text-emerald-400'}>
-              {isLiveGps ? 'Live Mobile GPS Active' : 'Wadala Corridor'}
-            </span>
+      {/* ─── Top Brand HUD (Optional, hidden in driver view for zero clutter) ─── */}
+      {showTopHud && (
+        <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700 shadow-md">
+          <span
+            className={`w-2.5 h-2.5 rounded-full ${
+              isLiveGps ? 'bg-blue-400 animate-ping' : 'bg-emerald-400 animate-pulse'
+            }`}
+          ></span>
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1">
+              <span>OpenStreetMap</span>
+              <span>•</span>
+              <span className={isLiveGps ? 'text-blue-400 font-bold' : 'text-emerald-400'}>
+                {isLiveGps ? 'Live Mobile GPS Active' : 'Wadala Corridor'}
+              </span>
+            </div>
+            <div className="text-xs font-bold text-white truncate max-w-[200px]">{activeRouteName}</div>
           </div>
-          <div className="text-xs font-bold text-white truncate max-w-[200px]">{activeRouteName}</div>
         </div>
-      </div>
+      )}
 
       {/* ─── Preemption Wave Active Badge ─── */}
-      {preemptedSignalId && (
-        <div className="absolute top-3 right-3 z-[1000] flex items-center gap-1.5 bg-emerald-600/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-emerald-400 text-white shadow-lg animate-pulse">
+      {showWaveBadge && preemptedSignalId && (
+        <div className="absolute top-3 right-12 z-[1000] flex items-center gap-1.5 bg-emerald-600/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-emerald-400 text-white shadow-lg animate-pulse">
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14" />
           </svg>

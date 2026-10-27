@@ -6,25 +6,19 @@ import {
   Navigation,
   Volume2,
   VolumeX,
-  Radio,
   CheckCircle2,
   RotateCcw,
   Gauge,
   ShieldAlert,
   ChevronDown,
   Smartphone,
-  MapPin,
   Building2,
-  HeartPulse,
-  Flame,
-  AlertTriangle,
-  Locate,
   X,
   Search,
 } from 'lucide-react';
 
 export default function DriverNavPage() {
-  const { state, actions, t } = useSimulation();
+  const { state, actions } = useSimulation();
 
   const [showDestinationModal, setShowDestinationModal] = useState(false);
   const [showSeverityModal, setShowSeverityModal] = useState(false);
@@ -47,7 +41,7 @@ export default function DriverNavPage() {
       h.area.toLowerCase().includes(destinationSearch.toLowerCase())
   );
 
-  // Format ETA minutes & seconds
+  // Format ETA minutes & distance
   const mins = Math.max(1, Math.round(state.etaSeconds / 60));
   const kmRemaining = (state.distanceRemainingMeters / 1000).toFixed(1);
 
@@ -93,42 +87,42 @@ export default function DriverNavPage() {
 
   return (
     <div className="flex flex-col h-full bg-slate-950 text-slate-100 overflow-hidden relative select-none">
-      {/* ─── 1. Top Turn-by-Turn Guidance Banner ─── */}
-      <div className="bg-emerald-600 text-white p-3.5 shadow-xl z-20 shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shrink-0 shadow-inner">
+      {/* ─── 1. Clean, Streamlined Turn Guidance & Green Corridor HUD ─── */}
+      <div className="bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 text-white p-3 shadow-lg z-20 shrink-0 border-b border-emerald-500/30">
+        <div className="flex items-center justify-between gap-3">
+          {/* Next Turn Instruction */}
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shrink-0 shadow-inner">
               <Navigation className="w-5 h-5 text-white transform -rotate-45" />
             </div>
-            <div className="min-w-0">
-              <div className="text-[11px] font-semibold text-emerald-100 uppercase tracking-wide flex items-center gap-1.5">
-                <span>{activeManeuver ? 'Nav Guidance' : t('nextTurn')}</span>
-                <span>•</span>
-                <span className="truncate">Destination: {selectedHospital.shortName}</span>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs sm:text-sm font-black tracking-tight truncate leading-snug">
+                {activeManeuver?.text || `Proceed to ${selectedHospital.name}`}
               </div>
-              <div
-                onClick={() => setShowDestinationModal(true)}
-                className="text-xs sm:text-sm font-extrabold tracking-tight truncate cursor-pointer hover:underline flex items-center gap-1.5"
-                title="Tap to change destination hospital"
-              >
-                <span className="truncate">{activeManeuver?.text || `➔ ${selectedHospital.name}`}</span>
-                <span className="text-[10px] bg-emerald-700/90 px-1.5 py-0.5 rounded text-emerald-200 border border-emerald-500/40 shrink-0">
+              <div className="flex items-center gap-1.5 text-[11px] text-emerald-100 mt-0.5">
+                <span className="truncate">➔ {selectedHospital.shortName}</span>
+                <button
+                  onClick={() => setShowDestinationModal(true)}
+                  className="text-[9px] font-bold bg-white/20 hover:bg-white/30 px-1.5 py-0.5 rounded text-white border border-white/20 shrink-0 transition-colors"
+                  title="Change destination hospital"
+                >
                   Change
-                </span>
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="text-right shrink-0 ml-2">
-            <div className="text-base font-black leading-tight">{mins} min</div>
-            <div className="text-[11px] text-emerald-100 font-medium">{kmRemaining} km</div>
+          {/* ETA & Distance */}
+          <div className="text-right shrink-0 pl-1 border-l border-white/20">
+            <div className="text-base font-black leading-tight text-white">{mins} min</div>
+            <div className="text-[11px] text-emerald-100 font-semibold">{kmRemaining} km</div>
           </div>
         </div>
 
-        {/* ─── Ahead-of-Time Signal Clearing Status Strip ─── */}
-        <div className="mt-2.5 bg-emerald-700/80 rounded-xl px-3 py-1.5 flex items-center justify-between border border-emerald-500/50 text-xs">
-          <div className="flex items-center gap-2 truncate">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-ping shrink-0"></span>
+        {/* Integrated Live Signal Clearing Strip */}
+        <div className="mt-2 pt-1.5 border-t border-emerald-500/40 flex items-center justify-between text-[11px]">
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping shrink-0" />
             <span className="text-emerald-100 font-medium truncate">
               Signal Ahead:{' '}
               <b className="text-white">
@@ -136,14 +130,14 @@ export default function DriverNavPage() {
               </b>
             </span>
           </div>
-          <span className="text-[10px] font-black tracking-wider bg-white text-emerald-800 px-2 py-0.5 rounded-md shadow-sm shrink-0">
+          <span className="text-[9px] font-extrabold tracking-wider bg-white/95 text-emerald-900 px-2 py-0.5 rounded shadow-sm shrink-0">
             🟢 GREEN WAVE ACTIVE
           </span>
         </div>
       </div>
 
-      {/* ─── 2. Full Center Stage OpenStreetMap ─── */}
-      <div className="flex-1 w-full relative min-h-[280px]">
+      {/* ─── 2. Spacious, Uncluttered Center Map Viewport ─── */}
+      <div className="flex-1 w-full relative min-h-[300px]">
         <MumbaiMap
           vehicleLocation={state.vehicleLocation}
           vehicleHeading={state.vehicleHeading}
@@ -157,76 +151,90 @@ export default function DriverNavPage() {
           height="100%"
           isLiveGps={state.isUsingDeviceGps}
           gpsAccuracy={state.gpsAccuracy}
+          showTopHud={false}
+          showWaveBadge={false}
         />
 
-        {/* Floating Speed HUD over Map */}
-        <div className="absolute bottom-3 left-3 z-[1000] bg-slate-900/95 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-2xl shadow-2xl flex items-center gap-2.5">
+        {/* Floating Minimal Speedometer HUD */}
+        <div className="absolute bottom-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-2xl shadow-xl flex items-center gap-2">
           <Gauge className="w-4 h-4 text-emerald-400" />
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-white font-mono">{state.speedKmh}</span>
-            <span className="text-[10px] text-slate-400 font-bold uppercase">KM/H</span>
+            <span className="text-xl font-black text-white font-mono leading-none">{state.speedKmh}</span>
+            <span className="text-[9px] text-slate-400 font-bold uppercase">KM/H</span>
           </div>
         </div>
 
-        {/* Floating Triage & Medical Reason Button */}
-        <div className="absolute bottom-3 right-16 z-[1000]">
-          <button
-            onClick={() => setShowSeverityModal(true)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold border backdrop-blur-md shadow-xl transition-all ${
-              state.severity === 'CODE_RED'
-                ? 'bg-red-600/90 text-white border-red-400 animate-pulse'
-                : state.severity === 'CODE_AMBER'
-                ? 'bg-amber-600/90 text-white border-amber-400'
-                : 'bg-emerald-600/90 text-white border-emerald-400'
-            }`}
-          >
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span className="truncate max-w-[120px] sm:max-w-[180px]">
-              {state.medicalReason || sevConfig.shortLabel}
-            </span>
-            <ChevronDown className="w-3.5 h-3.5 shrink-0" />
-          </button>
-        </div>
-
-        {/* Mobile GPS Toggle Pill on Map */}
-        <div className="absolute top-14 left-3 z-[1000]">
+        {/* Floating GPS Mode Toggle Pill */}
+        <div className="absolute top-3 left-3 z-[1000]">
           <button
             onClick={actions.toggleDeviceGps}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-bold border shadow-lg transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-bold border backdrop-blur-md shadow-lg transition-all ${
               state.isUsingDeviceGps
-                ? 'bg-blue-600 text-white border-blue-400 animate-pulse'
+                ? 'bg-blue-600/90 text-white border-blue-400 animate-pulse'
                 : 'bg-slate-900/90 text-slate-300 border-slate-700 hover:border-slate-500'
             }`}
+            title="Toggle between Device GPS and Route Simulation"
           >
             <Smartphone className="w-3 h-3 text-blue-400" />
-            <span>{state.isUsingDeviceGps ? 'Live Mobile GPS Active' : 'Tap to Use Phone GPS'}</span>
+            <span>{state.isUsingDeviceGps ? 'Mobile GPS Live' : 'Sim GPS'}</span>
           </button>
         </div>
       </div>
 
-      {/* ─── 3. Glanceable Bottom Cockpit Controls ─── */}
-      <div className="bg-slate-900/95 border-t border-slate-800 p-3 shrink-0 space-y-2 z-20">
-        {/* Active Medical Condition Strip */}
-        <div className="flex items-center justify-between text-xs px-1">
+      {/* ─── 3. Ergonomic Bottom Driver Cockpit Console ─── */}
+      <div className="bg-slate-900/95 border-t border-slate-800 p-2.5 shrink-0 space-y-2 z-20 shadow-2xl">
+        {/* Triage & Severity Status Bar (Single Unified Triage Button) */}
+        <button
+          onClick={() => setShowSeverityModal(true)}
+          className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs border transition-all ${
+            state.severity === 'CODE_RED'
+              ? 'bg-red-950/40 border-red-500/40 hover:bg-red-950/60'
+              : state.severity === 'CODE_AMBER'
+              ? 'bg-amber-950/40 border-amber-500/40 hover:bg-amber-950/60'
+              : 'bg-emerald-950/40 border-emerald-500/40 hover:bg-emerald-950/60'
+          }`}
+          title="Click to change emergency patient condition"
+        >
           <div className="flex items-center gap-2 truncate">
-            <span className="text-slate-400 font-medium">Condition:</span>
-            <span className="font-bold text-white truncate">{state.medicalReason}</span>
+            <ShieldAlert
+              className={`w-3.5 h-3.5 shrink-0 ${
+                state.severity === 'CODE_RED'
+                  ? 'text-red-400 animate-pulse'
+                  : state.severity === 'CODE_AMBER'
+                  ? 'text-amber-400'
+                  : 'text-emerald-400'
+              }`}
+            />
+            <span className="text-[11px] text-slate-400 font-medium">Triage:</span>
+            <span className="text-[11px] font-bold text-white truncate">
+              {state.medicalReason || sevConfig.shortLabel}
+            </span>
           </div>
-          <button
-            onClick={() => setShowSeverityModal(true)}
-            className="text-[10px] text-emerald-400 font-bold hover:underline shrink-0"
-          >
-            Adjust Triage
-          </button>
-        </div>
 
+          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            <span
+              className={`text-[9px] font-black px-1.5 py-0.5 rounded border ${
+                state.severity === 'CODE_RED'
+                  ? 'bg-red-500/20 text-red-300 border-red-500/40'
+                  : state.severity === 'CODE_AMBER'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+              }`}
+            >
+              {state.severity.replace('CODE_', '')}
+            </span>
+            <ChevronDown className="w-3 h-3 text-slate-400" />
+          </div>
+        </button>
+
+        {/* Driver Primary Action Buttons */}
         <div className="flex items-center gap-2">
           {/* Siren Button */}
           <button
             onClick={actions.toggleSiren}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-2xl text-xs font-black transition-all shadow-md ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-black transition-all shadow-md active:scale-98 ${
               state.sirenOn
-                ? 'bg-red-600 hover:bg-red-500 text-white animate-pulse'
+                ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-900/50 ring-2 ring-red-400/50 animate-pulse'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
             }`}
           >
@@ -238,7 +246,7 @@ export default function DriverNavPage() {
           {state.missionActive ? (
             <button
               onClick={actions.completePassage || actions.completeMission}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-2xl shadow-lg transition-all"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-900/40 active:scale-98 transition-all"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>ARRIVED AT HOSPITAL</span>
@@ -246,7 +254,7 @@ export default function DriverNavPage() {
           ) : (
             <button
               onClick={actions.startNewMission}
-              className="flex-1 flex items-center justify-center gap-2 py-3 px-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-2xl shadow-lg transition-all"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-xl shadow-lg shadow-blue-900/40 active:scale-98 transition-all"
             >
               <RotateCcw className="w-4 h-4" />
               <span>START NEW RUN</span>

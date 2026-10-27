@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSimulation } from '../context/SimulationContext';
 import { GreenRouteEmblem } from './Logo';
 import {
@@ -8,31 +8,12 @@ import {
   Cpu,
   Smartphone,
   Maximize2,
-  Minimize2,
   Globe,
-  Battery,
-  Wifi,
-  Radio,
   LogOut,
-  User,
-  HeartPulse,
 } from 'lucide-react';
 
 export default function MobileFrame({ children }) {
   const { state, actions, t } = useSimulation();
-  const [currentTime, setCurrentTime] = useState('19:42');
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-      );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
   const user = state.currentUser;
 
@@ -132,24 +113,13 @@ export default function MobileFrame({ children }) {
             : 'max-w-6xl h-[100dvh] md:h-[90vh] md:rounded-2xl md:border md:border-slate-800 overflow-hidden bg-slate-950 shadow-2xl'
         }`}
       >
-        {/* Smartphone Top Notch & Status Bar (in mobile frame mode) */}
+        {/* Smartphone Top Notch / Speaker (Clean, no fake time or battery) */}
         {state.isMobileFrame && (
-          <div className="relative bg-slate-950 px-6 pt-3 pb-2 flex items-center justify-between text-white text-xs select-none shrink-0 z-30">
-            <span className="font-bold tracking-tight text-[13px]">{currentTime}</span>
-
-            {/* Dynamic Island / Speaker Pill */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 top-2 w-28 h-4.5 bg-black rounded-full border border-slate-800 flex items-center justify-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-slate-900 border border-slate-700"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 animate-pulse"></span>
-            </div>
-
-            <div className="flex items-center gap-2 text-slate-300 text-[11px]">
-              <span className="text-[10px] font-bold text-emerald-400">5G</span>
-              <Wifi className="w-3.5 h-3.5" />
-              <div className="flex items-center gap-0.5">
-                <span className="text-[10px] font-semibold">96%</span>
-                <Battery className="w-4 h-4 text-emerald-400" />
-              </div>
+          <div className="relative bg-slate-950 px-6 py-2.5 flex items-center justify-center text-white select-none shrink-0 z-30">
+            {/* Sleek Dynamic Island / Speaker Pill */}
+            <div className="w-24 h-3.5 bg-black rounded-full border border-slate-800/80 flex items-center justify-center gap-2 shadow-inner">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-900 border border-slate-700"></span>
+              <span className="w-1 h-1 rounded-full bg-emerald-500/80"></span>
             </div>
           </div>
         )}
