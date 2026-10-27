@@ -31,6 +31,7 @@ export default function DriverNavPage() {
   const [destinationSearch, setDestinationSearch] = useState('');
 
   const currentRoute = state.currentRoute;
+  const activeManeuver = currentRoute.maneuvers?.[state.routeIndex] || currentRoute.maneuvers?.[0];
   const currentSignal = state.signals.find((s) => !s.preempted) || state.signals[state.signals.length - 1];
   const activePreemptedSignal = state.signals.find((s) => s.id === state.activePreemptedSignalId);
   const sevConfig = SEVERITY_CONFIG[state.severity] || SEVERITY_CONFIG.CODE_RED;
@@ -100,16 +101,18 @@ export default function DriverNavPage() {
               <Navigation className="w-5 h-5 text-white transform -rotate-45" />
             </div>
             <div className="min-w-0">
-              <div className="text-[11px] font-semibold text-emerald-100 uppercase tracking-wide">
-                {t('nextTurn')}
+              <div className="text-[11px] font-semibold text-emerald-100 uppercase tracking-wide flex items-center gap-1.5">
+                <span>{activeManeuver ? 'Nav Guidance' : t('nextTurn')}</span>
+                <span>•</span>
+                <span className="truncate">Destination: {selectedHospital.shortName}</span>
               </div>
               <div
                 onClick={() => setShowDestinationModal(true)}
-                className="text-sm sm:text-base font-extrabold tracking-tight truncate cursor-pointer hover:underline flex items-center gap-1.5"
+                className="text-xs sm:text-sm font-extrabold tracking-tight truncate cursor-pointer hover:underline flex items-center gap-1.5"
                 title="Tap to change destination hospital"
               >
-                <span>➔ {selectedHospital.shortName || selectedHospital.name}</span>
-                <span className="text-[10px] bg-emerald-700/90 px-1.5 py-0.5 rounded text-emerald-200 border border-emerald-500/40">
+                <span className="truncate">{activeManeuver?.text || `➔ ${selectedHospital.name}`}</span>
+                <span className="text-[10px] bg-emerald-700/90 px-1.5 py-0.5 rounded text-emerald-200 border border-emerald-500/40 shrink-0">
                   Change
                 </span>
               </div>
@@ -129,7 +132,7 @@ export default function DriverNavPage() {
             <span className="text-emerald-100 font-medium truncate">
               Signal Ahead:{' '}
               <b className="text-white">
-                {activePreemptedSignal ? activePreemptedSignal.name : currentSignal?.name || 'Hindmata Junction'}
+                {activePreemptedSignal ? activePreemptedSignal.name : currentSignal?.name || 'Vidyalankar Campus Junction'}
               </b>
             </span>
           </div>
@@ -147,8 +150,8 @@ export default function DriverNavPage() {
           routeCoordinates={currentRoute.pathCoordinates}
           signals={state.signals}
           hospitalLocation={[selectedHospital.lat, selectedHospital.lng]}
-          pickupLocation={[19.0178, 72.8478]}
-          activeRouteName={`Route to ${selectedHospital.shortName}`}
+          pickupLocation={currentRoute.pathCoordinates?.[0] || [19.0222, 72.8682]}
+          activeRouteName={currentRoute.name || `Vidyalankar Polytechnic ➔ ${selectedHospital.shortName}`}
           preemptedSignalId={state.activePreemptedSignalId}
           severity={state.severity}
           height="100%"

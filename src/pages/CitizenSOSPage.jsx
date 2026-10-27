@@ -21,8 +21,8 @@ export default function CitizenSOSPage() {
 
   const [emergencyType, setEmergencyType] = useState('ambulance');
   const [severity, setSeverity] = useState('CODE_RED');
-  const [pickupLocation, setPickupLocation] = useState('Dadar TT Circle, Central Railway');
-  const [hospitalId, setHospitalId] = useState('kem');
+  const [pickupLocation, setPickupLocation] = useState('Vidyalankar Polytechnic Campus, Wadala (East)');
+  const [hospitalId, setHospitalId] = useState('sion');
   const [patientNotes, setPatientNotes] = useState('');
 
   const sos = state.citizenSos;
@@ -96,7 +96,7 @@ export default function CitizenSOSPage() {
                 <div>
                   <div className="text-slate-400 text-[10px] uppercase font-semibold">Primary Driver</div>
                   <div className="font-bold text-white">{sos.driverName}</div>
-                  <div className="text-slate-400 text-[10px]">Base: KEM Trauma Bay</div>
+                  <div className="text-slate-400 text-[10px]">Base: Sion Apex Trauma Bay</div>
                 </div>
               </div>
 
@@ -104,7 +104,7 @@ export default function CitizenSOSPage() {
               <div className="mt-3 flex items-start gap-2 bg-emerald-900/30 p-2.5 rounded-xl border border-emerald-500/30 text-emerald-200 text-xs">
                 <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <b>Smart Green Corridor Active:</b> GreenRoute is clearing all traffic signals between Dadar TT and KEM Hospital beforehand. The ambulance will not be stuck in traffic!
+                  <b>Smart Green Corridor Active:</b> GreenRoute is clearing all traffic signals between Vidyalankar Polytechnic and Sion Hospital beforehand. The ambulance will not be stuck in traffic!
                 </div>
               </div>
 
@@ -132,7 +132,7 @@ export default function CitizenSOSPage() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-emerald-400" />
-                  {t('trackingAmbulance')} (Mumbai Central)
+                  {t('trackingAmbulance')} (Wadala - Sion Corridor)
                 </span>
                 <span className="text-[10px] text-slate-400 font-medium">GPS Updated 2s ago</span>
               </div>
@@ -142,8 +142,8 @@ export default function CitizenSOSPage() {
                   vehicleHeading={state.vehicleHeading}
                   routeCoordinates={state.currentRoute.pathCoordinates}
                   signals={state.signals}
-                  hospitalLocation={[19.0028, 72.8423]}
-                  pickupLocation={[19.0178, 72.8478]}
+                  hospitalLocation={[19.0392, 72.8617]}
+                  pickupLocation={[19.0222, 72.8682]}
                   activeRouteName={state.currentRoute.name}
                   preemptedSignalId={state.activePreemptedSignalId}
                   severity={state.severity}

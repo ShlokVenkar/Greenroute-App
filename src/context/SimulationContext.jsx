@@ -17,7 +17,7 @@ import {
   DIRECTION_LABELS,
 } from '../simulation/priorityEngine';
 
-// Default route is Dadar to KEM Hospital
+// Default route is Vidyalankar Polytechnic to Sion Hospital Trauma Center
 const DEFAULT_ROUTE = MUMBAI_ROUTES[0];
 
 const initialMumbaiState = {
@@ -35,20 +35,20 @@ const initialMumbaiState = {
   sirenOn: true,
   severity: 'CODE_RED', // 'CODE_RED' | 'CODE_AMBER' | 'CODE_YELLOW'
   medicalReason: 'Heart Attack / Cardiac Arrest',
-  selectedHospitalId: 'kem',
+  selectedHospitalId: 'sion',
   currentRoute: DEFAULT_ROUTE,
   routeIndex: 0, // current index in pathCoordinates
   vehicleLocation: DEFAULT_ROUTE.pathCoordinates[0],
   vehicleHeading: 180,
   speedKmh: 54,
-  distanceRemainingMeters: 2400,
-  etaSeconds: 270, // 4.5 mins
+  distanceRemainingMeters: 2800,
+  etaSeconds: 288, // 4.8 mins
   isUsingDeviceGps: false,
   gpsAccuracy: 12,
 
   // Signals on current route
   signals: DEFAULT_ROUTE.signals,
-  activePreemptedSignalId: 'SIG_101',
+  activePreemptedSignalId: 'SIG_VP01',
   clearedSignalCount: 1,
 
   // Citizen SOS state
@@ -58,9 +58,9 @@ const initialMumbaiState = {
     driverName: 'Ramesh Shinde',
     emergencyType: 'ambulance',
     severity: 'CODE_RED',
-    pickupLocation: 'Dadar TT Circle, Mumbai',
-    hospitalId: 'kem',
-    etaMinutes: 4,
+    pickupLocation: 'Vidyalankar Polytechnic Campus, Wadala (East)',
+    hospitalId: 'sion',
+    etaMinutes: 4.8,
   },
 
   // Hardware Prototype Bridge State
@@ -93,14 +93,14 @@ const initialMumbaiState = {
       id: 1,
       timestamp: new Date(),
       category: 'priority',
-      description: 'Emergency corridor activated for Ambulance MH-01-EQ-4421 towards KEM Hospital.',
+      description: 'Emergency corridor activated for Ambulance MH-01-EQ-4421 from Vidyalankar Polytechnic towards Sion Hospital Apex Trauma.',
       requestId: 'REQ-001',
     },
     {
       id: 2,
       timestamp: new Date(Date.now() - 30000),
       category: 'signal',
-      description: 'Signal SIG_101 Dadar TT locked GREEN. Cross traffic safe clearance completed.',
+      description: 'Signal SIG_VP01 Vidyalankar Campus locked GREEN. Cross traffic safe clearance completed.',
       requestId: 'REQ-001',
     },
   ],
@@ -152,10 +152,16 @@ function mumbaiReducer(state, action) {
 
     case 'SET_DESTINATION_HOSPITAL': {
       const hosp = MUMBAI_HOSPITALS.find((h) => h.id === action.hospitalId) || MUMBAI_HOSPITALS[0];
+      const matchingRoute = MUMBAI_ROUTES.find(r => r.hospitalId === hosp.id) || state.currentRoute;
       return {
         ...state,
         selectedHospitalId: hosp.id,
-        etaSeconds: (hosp.etaDefaultMins || 5) * 60,
+        currentRoute: matchingRoute,
+        routeIndex: 0,
+        vehicleLocation: matchingRoute.pathCoordinates[0],
+        signals: matchingRoute.signals,
+        distanceRemainingMeters: matchingRoute.totalDistanceKm * 1000,
+        etaSeconds: (hosp.etaDefaultMins || matchingRoute.estimatedGreenRouteMinutes || 5) * 60,
       };
     }
 
@@ -335,7 +341,7 @@ export function SimProvider({ children }) {
       if (nextIdx >= coords.length) {
         // Mission complete!
         dispatch({ type: 'COMPLETE_MISSION' });
-        logEvent('passage', 'Ambulance successfully reached KEM Hospital Emergency Casualty.');
+        logEvent('passage', `Ambulance successfully reached emergency casualty destination.`);
         clearInterval(navIntervalRef.current);
         return;
       }

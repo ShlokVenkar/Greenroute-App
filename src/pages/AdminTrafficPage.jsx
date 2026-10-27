@@ -89,7 +89,7 @@ export default function AdminTrafficPage() {
           <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
             <div className="text-[10px] text-slate-400 uppercase font-semibold">{t('activeCorridors')}</div>
             <div className="text-xl font-black text-emerald-400 mt-1">1 Live</div>
-            <div className="text-[10px] text-slate-400 truncate">Dadar ➔ KEM Hospital</div>
+            <div className="text-[10px] text-slate-400 truncate">Vidyalankar ➔ Sion Hospital</div>
           </div>
 
           <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3">
@@ -119,7 +119,7 @@ export default function AdminTrafficPage() {
               Central Traffic Map (Active Emergency Wave)
             </span>
             <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">
-              GPS LAT 19.0118, LNG 72.8449
+              Wadala East - Sion Corridor
             </span>
           </div>
           <div className="h-[240px] rounded-xl overflow-hidden">
@@ -128,8 +128,8 @@ export default function AdminTrafficPage() {
               vehicleHeading={state.vehicleHeading}
               routeCoordinates={state.currentRoute.pathCoordinates}
               signals={state.signals}
-              hospitalLocation={[19.0028, 72.8423]}
-              pickupLocation={[19.0178, 72.8478]}
+              hospitalLocation={[19.0392, 72.8617]}
+              pickupLocation={[19.0222, 72.8682]}
               activeRouteName={state.currentRoute.name}
               preemptedSignalId={state.activePreemptedSignalId}
               severity={state.severity}
